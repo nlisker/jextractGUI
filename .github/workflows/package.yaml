@@ -11,6 +11,9 @@ jobs:
 #     env:
 #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+
     - name: Create jpackage image
       run: gradlew jpackageImage
           
