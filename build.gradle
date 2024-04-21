@@ -3,7 +3,6 @@ plugins {
 	id "application"
 	id "org.openjfx.javafxplugin" version "+"
 	id "org.beryx.jlink" version "+"
-	id "org.kordamp.gradle.jdeps" version "+"
 	id "io.freefair.lombok" version "+"
 	id "eclipse"
 }
