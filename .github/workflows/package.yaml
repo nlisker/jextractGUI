@@ -1,0 +1,19 @@
+name: package
+
+jobs:
+	package:
+		runs-on: windows-latest
+		steps:
+		- name: Checkout sources
+		- uses: actions/checkout@v4
+#		  env:
+#			GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+		- name: Gluon Build
+		  run: gradlew jpackageImage
+          
+		- name: Upload
+          uses: actions/upload-artifact@v4
+		  with:
+			name: jfextract
+			path: build\jpackage\jfextract

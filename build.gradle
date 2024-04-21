@@ -1,0 +1,103 @@
+// jfextract //
+plugins {
+	id "application"
+	id "org.openjfx.javafxplugin" version "+"
+	id "org.beryx.jlink" version "+"
+	id "org.kordamp.gradle.jdeps" version "+"
+	id "io.freefair.lombok" version "+"
+	id "eclipse"
+}
+
+ext {
+	javaVersion = "22";
+	javafxVersion = "22";
+	lombokVersion = "1.18.32";
+	ikonliVersion = "12.3.1";
+	junitVersion = "5.10.2";
+	gradleWrapperVersion = "8.7";
+}
+
+dependencies {
+	implementation files("lib/jextract.jar")
+	implementation "org.kordamp.ikonli:ikonli-javafx:$ikonliVersion"
+	implementation "org.kordamp.ikonli:ikonli-materialdesign2-pack:$ikonliVersion"
+	implementation "org.kordamp.ikonli:ikonli-entypo-pack:$ikonliVersion"
+	testImplementation "org.junit.jupiter:junit-jupiter:$junitVersion"
+}
+
+java {
+	toolchain.languageVersion.set(JavaLanguageVersion.of(javaVersion))
+}
+
+lombok {
+	version = lombokVersion
+}
+
+javafx {
+    version = javafxVersion
+    modules = [ "javafx.controls" ]
+}
+
+application {
+	mainModule = "jfextract" // name defined in module-info.java - required by application plugin with modules
+	mainClass = "com.nlisker.jfextract.JFextract" // required by application plugin always
+}
+
+test {
+	useJUnitPlatform()
+}
+
+tasks.withType(JavaExec) {
+	jvmArgs += "--enable-preview"
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs.add("--enable-preview")
+//	options.compilerArgs.add("-parameters")
+	options.setEncoding("UTF-8")
+}
+
+eclipse.classpath {
+	downloadJavadoc = true
+	downloadSources = true
+	file.whenMerged {
+		entries.findAll {
+			it.kind == 'lib' && it.getEntryAttributes().get("test") != "true"
+		}.each {
+			it.entryAttributes["module"] = "true"
+		}
+	}
+}
+
+jlink {
+	options = ["--strip-debug",
+			   "--compress", "zip-6",
+			   "--no-header-files",
+			   "--no-man-pages"]
+	launcher {
+		name = "jfextract"
+		jvmArgs = ["--enable-preview"]
+		noConsole = true
+	}
+	jpackage {
+		icon = "src/main/resources/icon.ico"
+	}
+}
+
+tasks.named("wrapper") {
+	gradleVersion = gradleWrapperVersion
+}
+
+gradle.startParameter.showStacktrace = org.gradle.api.logging.configuration.ShowStacktrace.ALWAYS
+
+/*
+create gradle taks:
+
+from the jextract folder that contains 'modules':
+"c:\Program Files\java\jdk-22\bin\jimage" extract modules
+Command that creates the jar:
+"c:\Program Files\java\jdk-22\bin\jar" cfM jextract.jar -C org.openjdk.jextract/ .
+c creates a jar
+M needed so 'jar' does not create its own manifest, overriding the existing one
+f defines the filename (and dirs) of the jar
+*/
