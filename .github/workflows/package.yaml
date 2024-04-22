@@ -1,10 +1,13 @@
-name: package
+name: Package
 
-on: workflow_dispatch
+on: push #workflow_dispatch
 
 jobs:
   package:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        os: [ubuntu, macos, windows]
+    runs-on: ${{ matrix.os }}-latest
     steps:
     - name: Checkout sources
       uses: actions/checkout@v4
@@ -21,10 +24,10 @@ jobs:
       uses: gradle/actions/setup-gradle@v3
 
     - name: Create jpackage image
-      run: .\gradlew jpackageImage
+      run: ./gradlew jpackageImage
           
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
-        name: jfextract
-        path: build\jpackage\jfextract
+        name: jfextract-${{ matrix.os }}
+        path: build/jpackage/jfextract
