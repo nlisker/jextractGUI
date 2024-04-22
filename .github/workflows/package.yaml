@@ -13,7 +13,7 @@ jobs:
       uses: oracle-actions/setup-java@v1
       with:
         website: jdk.java.net
-        java-version: |
+        release: |
           22
           21
 
