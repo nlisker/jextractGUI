@@ -32,11 +32,11 @@ jobs:
 #    - name: Look for files
 #      run: ls build/jpackage/jextractGUI
 
-    - name: Show all files
-      run: ls -R
+#    - name: Show all files
+#      run: ls -R
 
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
         name: jextractGUI-${{ matrix.os }}
-        path: build/jpackage/jextractGUI
+        path: build/jpackage/jextractGUI*
