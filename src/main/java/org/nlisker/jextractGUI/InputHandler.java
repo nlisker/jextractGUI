@@ -1,4 +1,4 @@
-package com.nlisker.jfextract;
+package org.nlisker.jextractGUI;
 
 import java.io.File;
 import java.io.IOException;

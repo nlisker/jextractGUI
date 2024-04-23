@@ -32,5 +32,5 @@ jobs:
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
-        name: jfextract-${{ matrix.os }}
-        path: build/jpackage/jfextract
+        name: jextractGUI-${{ matrix.os }}
+        path: build/jpackage/jextractGUI

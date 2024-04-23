@@ -1,4 +1,4 @@
-package com.nlisker.jfextract;
+package org.nlisker.jextractGUI;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -38,9 +38,8 @@ import org.kordamp.ikonli.materialdesign2.MaterialDesignF;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignH;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignK;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignM;
-
-import com.nlisker.jfextract.model.CLOption;
-import com.nlisker.jfextract.model.Displayable.Header;
+import org.nlisker.jextractGUI.model.CLOption;
+import org.nlisker.jextractGUI.model.Displayable.Header;
 
 /**
  * Utility class for creating common controls.

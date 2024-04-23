@@ -1,4 +1,4 @@
-package com.nlisker.jfextract;
+package org.nlisker.jextractGUI;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -7,8 +7,8 @@ import java.util.Optional;
 
 import javafx.stage.DirectoryChooser;
 
-import com.nlisker.jfextract.model.CLOption;
-import com.nlisker.jfextract.model.Displayable.Header;
+import org.nlisker.jextractGUI.model.CLOption;
+import org.nlisker.jextractGUI.model.Displayable.Header;
 
 /**
  * Viewer and controls for the <i>includes</i> directories.
@@ -34,7 +34,7 @@ final class IncludesViewer extends FileListViewer {
 	public Optional<List<File>> filesSupplier() {
 		var chooser = new DirectoryChooser();
 		chooser.setTitle("Select include dirs");
-		return Optional.ofNullable(chooser.showDialog(JFextract.stage)).map(List::of);
+		return Optional.ofNullable(chooser.showDialog(JextractGUI.stage)).map(List::of);
 	}
 
 	@Override

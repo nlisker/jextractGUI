@@ -1,4 +1,4 @@
-package com.nlisker.jfextract.model;
+package org.nlisker.jextractGUI.model;
 
 import java.util.Objects;
 import java.util.Optional;

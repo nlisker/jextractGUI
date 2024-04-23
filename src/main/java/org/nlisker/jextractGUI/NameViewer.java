@@ -1,4 +1,4 @@
-package com.nlisker.jfextract;
+package org.nlisker.jextractGUI;
 
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -11,8 +11,8 @@ import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 
-import com.nlisker.jfextract.model.CLOption;
-import com.nlisker.jfextract.model.Displayable.Header;
+import org.nlisker.jextractGUI.model.CLOption;
+import org.nlisker.jextractGUI.model.Displayable.Header;
 
 /**
  * Viewer and controls for the package and class names generation.

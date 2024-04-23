@@ -1,4 +1,4 @@
-package com.nlisker.jfextract;
+package org.nlisker.jextractGUI;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -57,17 +57,16 @@ import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignD;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignE;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignP;
+import org.nlisker.jextractGUI.model.CLOption;
+import org.nlisker.jextractGUI.model.Displayable;
+import org.nlisker.jextractGUI.model.Displayable.DeclarationDisplay;
+import org.nlisker.jextractGUI.model.Displayable.Header;
+import org.nlisker.jextractGUI.model.Displayable.IncludeKind;
+import org.nlisker.jextractGUI.model.Displayable.IncludeKindDisplay;
 import org.openjdk.jextract.Declaration;
 import org.openjdk.jextract.Declaration.Scoped;
 import org.openjdk.jextract.JextractTool;
 import org.openjdk.jextract.JextractTool.JextractToolProvider;
-
-import com.nlisker.jfextract.model.CLOption;
-import com.nlisker.jfextract.model.Displayable;
-import com.nlisker.jfextract.model.Displayable.DeclarationDisplay;
-import com.nlisker.jfextract.model.Displayable.Header;
-import com.nlisker.jfextract.model.Displayable.IncludeKind;
-import com.nlisker.jfextract.model.Displayable.IncludeKindDisplay;
 
 /**
  * Viewer and controls for the header files and their content (<i>symbols</i>).
@@ -211,7 +210,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		fileChooser.setTitle("Select Headers");
 		var filter = EXTENTIONS.stream().map(ext -> "*" + ext).toList();
 		fileChooser.getExtensionFilters().add(new ExtensionFilter("Clang C", filter));
-		return Optional.ofNullable(fileChooser.showOpenMultipleDialog(JFextract.stage));
+		return Optional.ofNullable(fileChooser.showOpenMultipleDialog(JextractGUI.stage));
 	}
 
 	@Override

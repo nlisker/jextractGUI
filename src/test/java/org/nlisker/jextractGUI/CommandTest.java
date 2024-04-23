@@ -1,4 +1,4 @@
-package com.jfextract;
+package org.nlisker.jextractGUI;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -6,9 +6,8 @@ import java.io.File;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-
-import com.nlisker.jfextract.model.Displayable;
-import com.nlisker.jfextract.model.Macro;
+import org.nlisker.jextractGUI.model.Displayable;
+import org.nlisker.jextractGUI.model.Macro;
 
 public class CommandTest {
 

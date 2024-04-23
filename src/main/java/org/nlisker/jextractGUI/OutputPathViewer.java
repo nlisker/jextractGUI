@@ -1,4 +1,4 @@
-package com.nlisker.jfextract;
+package org.nlisker.jextractGUI;
 
 import java.io.File;
 import java.util.Optional;
@@ -9,8 +9,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 
-import com.nlisker.jfextract.model.CLOption;
-import com.nlisker.jfextract.model.Displayable.Header;
+import org.nlisker.jextractGUI.model.CLOption;
+import org.nlisker.jextractGUI.model.Displayable.Header;
 
 /**
  * Viewer and controls for the source files generation.
@@ -33,7 +33,7 @@ final class OutputPathViewer extends BorderPane {
 
 		var selectButton = ControlUtils.createSelectButton("Select output path");
 		selectButton.disableProperty().bind(symbolsViewer.noFocus());
-		selectButton.setOnAction(e -> Optional.ofNullable(new DirectoryChooser().showDialog(JFextract.stage))
+		selectButton.setOnAction(e -> Optional.ofNullable(new DirectoryChooser().showDialog(JextractGUI.stage))
 			.map(File::getPath)
 			.ifPresent(textField::setText));
 

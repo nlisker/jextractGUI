@@ -1,4 +1,4 @@
-module jfextract {
+module org.nlisker.jextractGUI {
 	requires static lombok;
 
 	requires transitive javafx.graphics;
@@ -11,5 +11,5 @@ module jfextract {
 
 	requires org.openjdk.jextract;
 
-	exports com.nlisker.jfextract to javafx.graphics;
+	exports org.nlisker.jextractGUI to javafx.graphics;
 }

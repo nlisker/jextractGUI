@@ -1,4 +1,4 @@
-package com.nlisker.jfextract;
+package org.nlisker.jextractGUI;
 
 import javafx.geometry.Insets;
 import javafx.scene.control.Separator;
@@ -13,8 +13,8 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.PackagePrivate;
 
-import com.nlisker.jfextract.NameViewer.ClassNameViewer;
-import com.nlisker.jfextract.NameViewer.PackageNameViewer;
+import org.nlisker.jextractGUI.NameViewer.ClassNameViewer;
+import org.nlisker.jextractGUI.NameViewer.PackageNameViewer;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 class MainView extends BorderPane {

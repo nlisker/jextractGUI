@@ -1,4 +1,4 @@
-package com.nlisker.jfextract.model;
+package org.nlisker.jextractGUI.model;
 
 import java.nio.file.Path;
 

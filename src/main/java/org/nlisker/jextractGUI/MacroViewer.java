@@ -1,4 +1,4 @@
-package com.nlisker.jfextract;
+package org.nlisker.jextractGUI;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,9 +17,9 @@ import javafx.scene.text.Text;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
-import com.nlisker.jfextract.model.CLOption;
-import com.nlisker.jfextract.model.Macro;
-import com.nlisker.jfextract.model.Displayable.Header;
+import org.nlisker.jextractGUI.model.CLOption;
+import org.nlisker.jextractGUI.model.Macro;
+import org.nlisker.jextractGUI.model.Displayable.Header;
 
 /**
  * Viewer and controls for the <i>macros</i>.

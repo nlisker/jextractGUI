@@ -1,4 +1,4 @@
-package com.nlisker.jfextract;
+package org.nlisker.jextractGUI;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -10,8 +10,8 @@ import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
-import com.nlisker.jfextract.model.CLOption;
-import com.nlisker.jfextract.model.Displayable.Header;
+import org.nlisker.jextractGUI.model.CLOption;
+import org.nlisker.jextractGUI.model.Displayable.Header;
 
 /**
  * Viewer and controls for the <i>libraries</i> files.
@@ -61,7 +61,7 @@ final class LibrariesViewer extends FileListViewer {
 		fileChooser.setTitle("Select Libraries");
 		var filter = EXTENTIONS.stream().map(ext -> "*" + ext).toList();
 		fileChooser.getExtensionFilters().add(new ExtensionFilter("Libraries", filter));
-		return Optional.ofNullable(fileChooser.showOpenMultipleDialog(JFextract.stage));
+		return Optional.ofNullable(fileChooser.showOpenMultipleDialog(JextractGUI.stage));
 	}
 
 	@Override

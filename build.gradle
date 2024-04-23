@@ -1,4 +1,4 @@
-// jfextract //
+// jextractGUI //
 plugins {
 	id "application"
 	id "org.openjfx.javafxplugin" version "+"
@@ -38,8 +38,8 @@ javafx {
 }
 
 application {
-	mainModule = "jfextract" // name defined in module-info.java - required by application plugin with modules
-	mainClass = "com.nlisker.jfextract.JFextract" // required by application plugin always
+	mainModule = "org.nlisker.jextractGUI" // name defined in module-info.java - required by application plugin with modules
+	mainClass = "org.nlisker.jextractGUI.JextractGUI" // required by application plugin always
 }
 
 test {
@@ -52,7 +52,6 @@ tasks.withType(JavaExec) {
 
 tasks.withType(JavaCompile).configureEach {
 	options.compilerArgs.add("--enable-preview")
-//	options.compilerArgs.add("-parameters")
 	options.setEncoding("UTF-8")
 }
 
@@ -74,7 +73,7 @@ jlink {
 			   "--no-header-files",
 			   "--no-man-pages"]
 	launcher {
-		name = "jfextract"
+		name = "jextractGUI"
 		jvmArgs = ["--enable-preview"]
 		noConsole = true
 	}

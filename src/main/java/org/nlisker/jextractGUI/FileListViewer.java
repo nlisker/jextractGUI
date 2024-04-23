@@ -1,4 +1,4 @@
-package com.nlisker.jfextract;
+package org.nlisker.jextractGUI;
 
 import java.io.File;
 import java.util.List;
@@ -17,8 +17,8 @@ import javafx.scene.text.Text;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
-import com.nlisker.jfextract.model.CLOption;
-import com.nlisker.jfextract.model.Displayable.Header;
+import org.nlisker.jextractGUI.model.CLOption;
+import org.nlisker.jextractGUI.model.Displayable.Header;
 
 /**
  * Parent class of viewers and controls for file lists. 
