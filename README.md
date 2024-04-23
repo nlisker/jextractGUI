@@ -10,6 +10,13 @@ If offers several benefits over using the command line tool:
 
 ![screenshot](doc/screenshot.png)
 
+# Requirements
+
+* You must have the [jextract 22 binaries](https://jdk.java.net/jextract) for your operating system on your `PATH`, i.e., `path/to/jextract/bin`. This is because jextractGUI does not ship with all the binaries needed for each operating system due to size considerations. For example, jextract relies on the [Clang](https://en.wikipedia.org/wiki/Clang) compiler whose binaries are located under the `bin` directory for Windows and the `lib` directory for Linux and MacOs. These are ~100MB each.
+* jextractGUI requires the `--enable-preview` JVM argument to run. This is already included in the provided executable below.
+* jextractGUI does not require the [`--enable-native-access=<module>`](https://docs.oracle.com/en/java/javase/22/core/restricted-methods.html) JVM argument itself, but an application that uses the FFM Java files produced by jextractGUI might.
+* There is no need to have a JDK on your machine to run jextractGUI since it ships with its own runtime image.
+
 # Download
 
 An executable is created here (using jpackage).
