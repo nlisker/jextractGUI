@@ -79,7 +79,7 @@ jlink {
 		noConsole = true
 	}
 	jpackage {
-		icon = "src/main/resources/icon.ico"
+		icon = "src/main/resources/icon.ico" // only works for Windows, other OS's need a different format
 	}
 }
 
@@ -88,15 +88,3 @@ tasks.named("wrapper") {
 }
 
 gradle.startParameter.showStacktrace = org.gradle.api.logging.configuration.ShowStacktrace.ALWAYS
-
-/*
-create gradle taks:
-
-from the jextract folder that contains 'modules':
-"c:\Program Files\java\jdk-22\bin\jimage" extract modules
-Command that creates the jar:
-"c:\Program Files\java\jdk-22\bin\jar" cfM jextract.jar -C org.openjdk.jextract/ .
-c creates a jar
-M needed so 'jar' does not create its own manifest, overriding the existing one
-f defines the filename (and dirs) of the jar
-*/
