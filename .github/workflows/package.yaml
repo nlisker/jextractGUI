@@ -29,8 +29,8 @@ jobs:
     - name: Create jpackage image
       run: ./gradlew jpackageImage
 
-    - name: Look for files
-      run: ls build/jpackage/jextractGUI
+#    - name: Look for files
+#      run: ls build/jpackage/jextractGUI
 
     - name: Show all files
       run: ls -R
