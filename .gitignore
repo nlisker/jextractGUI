@@ -3,3 +3,5 @@
 /gen
 /.gradle
 /.settings
+.classpath
+.project
