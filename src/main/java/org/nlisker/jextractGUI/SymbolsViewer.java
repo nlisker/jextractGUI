@@ -244,6 +244,18 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 				runningTasks.remove(task);
 			}
 		});
+		task.exceptionProperty().subscribe((__, ex) -> {
+			ex.printStackTrace();
+			String message;
+			if (ex.getMessage().contains("clang")) {
+				message = "clang not found on the PATH variable. On Windows, add the /bin dir of the jextract binaries to the PATH, "
+						+ "and on MacOS and Linux add the /lib dir. Then restart the application.";
+			} else {
+				message = ex.getMessage();
+			}
+			new Alert(AlertType.ERROR, message, ButtonType.OK).show();
+		});
+
 		var thread = new Thread(task);
 		thread.setDaemon(true);
 		thread.start();
@@ -272,14 +284,8 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 	}
 
 	private Map<IncludeKind, List<Declaration>> mapSymbols(File headerFile) {
-		try {
-			Scoped header = JextractTool.parse(List.of(headerFile.toPath()));
-			return header.members().stream().collect(Collectors.groupingBy(IncludeKind::fromDeclaration));
-		} catch (Exception e) {
-			e.printStackTrace();
-			new Alert(AlertType.ERROR, e.getMessage(), ButtonType.OK).show();
-			throw e;
-		}
+		Scoped header = JextractTool.parse(List.of(headerFile.toPath()));
+		return header.members().stream().collect(Collectors.groupingBy(IncludeKind::fromDeclaration));
 	}
 
 	private CheckBoxTreeItem<Displayable> createHeaderItem(File headerFile) {
