@@ -24,7 +24,7 @@ jobs:
       uses: gradle/actions/setup-gradle@v3
 
     - name: Make gradlew executable on Linux
-      if: runner.os == 'Linux'
+      if: matrix.os != 'windows-latest'
       run: chmod +x ./gradlew
 
     - name: Create jpackage image
