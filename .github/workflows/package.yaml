@@ -23,8 +23,8 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
 
-    - name: Make gradlew executable on Linux
-      if: matrix.os != 'windows-latest'
+    - name: Make gradlew executable on Linux/MacOS
+      if: runner.os != 'Windows'
       run: chmod +x ./gradlew
 
     - name: Create jpackage image
