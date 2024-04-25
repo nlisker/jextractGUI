@@ -6,4 +6,4 @@ const C = 4;
 
 #define F 5;
 
-int I = 1;
+int i = 1;
