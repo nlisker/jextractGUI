@@ -75,7 +75,8 @@ jlink {
 			   "--no-man-pages"]
 	launcher {
 		name = "jextractGUI"
-		jvmArgs = ["--enable-preview", "--enable-native-access=org.openjdk.jextract"]
+		jvmArgs = ["--enable-preview",
+				   "--enable-native-access", "org.openjdk.jextract"]
 		noConsole = true
 	}
 	jpackage {
