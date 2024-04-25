@@ -48,6 +48,7 @@ test {
 
 tasks.withType(JavaExec) {
 	jvmArgs += "--enable-preview"
+	jvmArgs += "--enable-native-access=org.openjdk.jextract"
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -74,7 +75,7 @@ jlink {
 			   "--no-man-pages"]
 	launcher {
 		name = "jextractGUI"
-		jvmArgs = ["--enable-preview"]
+		jvmArgs = ["--enable-preview", "--enable-native-access=org.openjdk.jextract"]
 		noConsole = true
 	}
 	jpackage {
