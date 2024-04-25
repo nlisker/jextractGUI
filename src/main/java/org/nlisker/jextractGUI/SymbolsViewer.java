@@ -14,8 +14,10 @@ import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -54,9 +56,9 @@ import lombok.experimental.FieldDefaults;
 
 import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
-import org.kordamp.ikonli.materialdesign2.MaterialDesignD;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignE;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignP;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignR;
 import org.nlisker.jextractGUI.model.CLOption;
 import org.nlisker.jextractGUI.model.Displayable;
 import org.nlisker.jextractGUI.model.Displayable.DeclarationDisplay;
@@ -102,7 +104,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 	}
 
 	private SymbolsViewer() {
-		ObservableValue<Header> parentHeader = tree.getSelectionModel().selectedItemProperty().map(item -> {
+		ObservableValue<Header> parentHeader = selectedItem().map(item -> {
 			while (!(item.getValue() instanceof Header)) {
 				item = item.getParent();
 			}
@@ -120,6 +122,17 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 	}
 
 	private void createControl(CheckBox detailedViewCB) {
+		HBox batchControls = createBatchControls(detailedViewCB);
+		HBox headerControls = createHeaderControls();
+
+		addDnD(tree);
+		var stackPane = ControlUtils.createAndAttachDropHint(tree, noItems);
+
+		var vControls = new VBox(2, batchControls, headerControls, stackPane);
+		setCenter(vControls);
+	}
+
+	private HBox createBatchControls(CheckBox detailedViewCB) {
 		var expandButton = createCollapseExpandButton(true);
 		var collapseButton = createCollapseExpandButton(false);
 
@@ -137,24 +150,31 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 				new Separator(Orientation.VERTICAL), runAllButton, writeAllButton,
 				new Separator(Orientation.VERTICAL), progressIndicator);
 		batchControls.setPadding(new Insets(2, 0, 0, 2));
+		return batchControls;
+	}
 
+	private HBox createHeaderControls() {
 		var helpButton = ControlUtils.createHelpButton(CLOption.INCLUDE);
 		Text title = ControlUtils.createTitle("Headers");
 
 		var selectButton = ControlUtils.createSelectButton("Select header path");
 		selectButton.setOnAction(e -> addValidFiles());
 
+		var removeButton = ControlUtils.createRemoveButton();
+		var isSelectedHeader = selectedItem().map(item -> !(item.getValue() instanceof Header));
+		removeButton.disableProperty().bind(selectedItem().isNull().or(BooleanExpression.booleanExpression(isSelectedHeader)));
+		removeButton.setOnAction(e -> {
+			var alert = new Alert(AlertType.CONFIRMATION);
+			alert.setContentText("Are you sure you want to remove the selected headers?");
+			alert.showAndWait().filter(ButtonType.OK::equals).ifPresent(b -> removeSelected());
+		});
+
 		String prompt = STR."\{File.separator}path\{File.separator}header.h";
 		Node freeTextControls = ControlUtils.createFreeTextControl("Enter header path", prompt, 100, this::addValidText);
 
-		HBox headerControls = ControlUtils.createControls(helpButton, title, selectButton, freeTextControls);
+		HBox headerControls = ControlUtils.createControls(helpButton, title, selectButton, removeButton, freeTextControls);
 		headerControls.setPadding(new Insets(0, 0, 0, 2));
-
-		addDnD(tree);
-		var stackPane = ControlUtils.createAndAttachDropHint(tree, noItems);
-
-		var vControls = new VBox(2, batchControls, headerControls, stackPane);
-		setCenter(vControls);
+		return headerControls;
 	}
 
 	private void configureTree() {
@@ -194,6 +214,10 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		return tree.getSelectionModel().getSelectedItems();
 	}
 
+	private ReadOnlyObjectProperty<TreeItem<Displayable>> selectedItem() {
+		return tree.getSelectionModel().selectedItemProperty();
+	}
+
 	@Override
 	public boolean notContains(TreeItem<Displayable> item) {
 		return items().stream().map(TreeItem::getValue).map(Displayable::detailed).noneMatch(item.getValue().detailed()::equals);
@@ -227,13 +251,55 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		return file.isFile() && EXTENTIONS.stream().anyMatch(file.toString()::endsWith);
 	}
 
+	private CheckBoxTreeItem<Displayable> createHeaderItem(File headerFile) {
+		var headerDisplay = new Header(headerFile);
+		var headerItem = new CheckBoxTreeItem<Displayable>(headerDisplay, null, true);
+		addOperationsButtonsForHeader(headerItem);
+		return headerItem;
+	}
+
+	private void addErrorButtonsForHeader(CheckBoxTreeItem<Displayable> headerItem, String message) {
+		var reloadButton = ControlUtils.createButton(MaterialDesignR.REFRESH_CIRCLE, Color.GREEN, "Reload header");
+		reloadButton.setOnAction(e -> {
+			items().remove(headerItem);
+			add(headerItem);
+		});
+
+		var errorButton = ControlUtils.createButton(MaterialDesignA.ALERT, Color.DARKBLUE, "Show error");
+		errorButton.setOnAction(e -> new Alert(AlertType.INFORMATION, message, ButtonType.OK).show());
+
+		var buttons = new HBox(5, errorButton, reloadButton);
+		buttons.setPadding(new Insets(0, 0, 0, 5));
+		headerItem.setGraphic(buttons);
+	}
+
+	private void addOperationsButtonsForHeader(CheckBoxTreeItem<Displayable> headerItem) {
+		BooleanBinding notSelected = (headerItem.selectedProperty().or(headerItem.indeterminateProperty())).not();
+
+		var runButton = ControlUtils.createButton(MaterialDesignP.PLAY_BOX, Color.GREEN, "Generate files");
+		runButton.disableProperty().bind(notSelected);
+		runButton.setOnAction(e -> runCommandForHeader(headerItem));
+
+		var writeButton = ControlUtils.createButton(MaterialDesignP.PENCIL_BOX, Color.DARKBLUE, "Print command");
+		writeButton.disableProperty().bind(notSelected);
+		writeButton.setOnAction(e -> writeCommandForHeader(headerItem));
+
+		var buttons = new HBox(5, runButton, writeButton);
+		buttons.setPadding(new Insets(0, 0, 0, 5));
+		headerItem.setGraphic(buttons);
+		headerItem.setExpanded(true);
+	}
+
 	@Override
-	public void add(TreeItem<Displayable> headerItem) {
+	public void add(TreeItem<Displayable> treeHeaderItem) {
+		var headerItem = (CheckBoxTreeItem<Displayable>) treeHeaderItem;
 		var task = new Task<Void>() {
 
 			@Override
 			protected Void call() throws IOException {
-				addHeader((CheckBoxTreeItem<Displayable>) headerItem);
+				populateHeaderSymbols(headerItem);
+				addOperationsButtonsForHeader(headerItem);
+				addHeaderItem(headerItem);
 				return null;
 			}
 		};
@@ -246,12 +312,14 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		});
 		task.exceptionProperty().subscribe((__, ex) -> {
 			ex.printStackTrace();
-			String message;
-			if (ex.getMessage().contains("clang")) {
+			String message = ex.getMessage();
+			if (message.contains("clang")) {
 				message = "clang not found on the PATH variable. On Windows, add the /bin dir of the jextract binaries to the PATH, "
 						+ "and on MacOS and Linux add the /lib dir. Then restart the application.";
-			} else {
-				message = ex.getMessage();
+			} else if (message.contains("file not found")) {
+				message = ex.getMessage() + ": Add the including folders to the Includes list and click Reload ⟳.";
+				addErrorButtonsForHeader(headerItem, message);
+				addHeaderItem(headerItem);
 			}
 			new Alert(AlertType.ERROR, message, ButtonType.OK).show();
 		});
@@ -261,8 +329,17 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		thread.start();
 	}
 
-	private void addHeader(CheckBoxTreeItem<Displayable> headerItem) {
-		Map<IncludeKind, List<Declaration>> symbols = mapSymbols(((Header) headerItem.getValue()).file());
+	private void addHeaderItem(CheckBoxTreeItem<Displayable> headerItem) {
+		Platform.runLater(() -> {
+			root().getChildren().add(headerItem);
+			tree.getSelectionModel().clearSelection();
+			tree.getSelectionModel().select(headerItem);
+		});
+	}
+
+	private void populateHeaderSymbols(CheckBoxTreeItem<Displayable> headerItem) {
+		var header = (Header) headerItem.getValue();
+		Map<IncludeKind, List<Declaration>> symbols = mapSymbols(header.file(), header.includes());
 		System.out.println(symbols);
 
 		symbols.forEach((includeKind, declarations) -> {
@@ -276,47 +353,12 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 			}
 			headerItem.getChildren().add(includeKindItem);
 		});
-		Platform.runLater(() -> {
-			root().getChildren().add(headerItem);
-			tree.getSelectionModel().clearSelection();
-			tree.getSelectionModel().select(headerItem);
-		});
 	}
 
-	private Map<IncludeKind, List<Declaration>> mapSymbols(File headerFile) {
-		Scoped header = JextractTool.parse(List.of(headerFile.toPath()));
+	private Map<IncludeKind, List<Declaration>> mapSymbols(File headerFile, List<File> includes) {
+		var options = includes.stream().flatMap(include -> List.of("-I", include.toString()).stream()).toArray(String[]::new);
+		Scoped header = JextractTool.parse(List.of(headerFile.toPath()), options);
 		return header.members().stream().collect(Collectors.groupingBy(IncludeKind::fromDeclaration));
-	}
-
-	private CheckBoxTreeItem<Displayable> createHeaderItem(File headerFile) {
-		var headerDisplay = new Header(headerFile);
-		var headerItem = new CheckBoxTreeItem<Displayable>(headerDisplay, null, true);
-		createButtonsForHeader(headerItem);
-		return headerItem;
-	}
-
-	private void createButtonsForHeader(CheckBoxTreeItem<Displayable> headerItem) {
-		var removeButton = ControlUtils.createButton(MaterialDesignD.DELETE, Color.rgb(200, 0, 0), "Remove header");
-		removeButton.setOnAction(e -> {
-			var alert = new Alert(AlertType.CONFIRMATION);
-			alert.setContentText("Are you sure you want to remove " + headerItem.getValue().simple() + "?");
-			alert.showAndWait().filter(ButtonType.OK::equals).ifPresent(b -> root().getChildren().remove(headerItem));
-		});
-
-		BooleanBinding notSelected = (headerItem.selectedProperty().or(headerItem.indeterminateProperty())).not();
-
-		var runButton = ControlUtils.createButton(MaterialDesignP.PLAY_BOX, Color.GREEN, "Generate files");
-		runButton.disableProperty().bind(notSelected);
-		runButton.setOnAction(e -> runCommandForHeader(headerItem));
-
-		var writeButton = ControlUtils.createButton(MaterialDesignP.PENCIL_BOX, Color.DARKBLUE, "Print command");
-		writeButton.disableProperty().bind(notSelected);
-		writeButton.setOnAction(e -> writeCommandForHeader(headerItem));
-
-		var buttons = new HBox(5, removeButton, runButton, writeButton);
-		buttons.setPadding(new Insets(0, 0, 0, 5));
-		headerItem.setGraphic(buttons);
-		headerItem.setExpanded(true);
 	}
 
 	/**
