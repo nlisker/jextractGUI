@@ -379,21 +379,28 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 	 * Runs the command for the requested header.
 	 */
 	private void runCommandForHeader(CheckBoxTreeItem<Displayable> headerItem) {
+		var oldErrorStream = System.err;
 		try (var byteStream = new ByteArrayOutputStream();
 			 var newErrorStream = new PrintStream(byteStream)) {
-			var oldErrorStream = System.err;
 			System.setErr(newErrorStream);
+
 			List<String> commandForHeader = createArgsForHeader(headerItem);
 			System.out.println("running " + commandForHeader);
 			jextract.run(System.out, System.err, commandForHeader.toArray(new String[0]));
+
 			System.err.flush();
-			new Alert(AlertType.WARNING, headerItem.getValue().simple() + byteStream.toString(), ButtonType.OK).show();
-			newErrorStream.close();
-			System.setErr(oldErrorStream);
+			var errorMessage = byteStream.toString();
+			if (!errorMessage.isBlank()) {
+				new Alert(AlertType.WARNING, headerItem.getValue().simple() + "\n" + errorMessage, ButtonType.OK).show();
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 			new Alert(AlertType.ERROR, e.getMessage(), ButtonType.OK).show();
+		} finally {
+			System.setErr(oldErrorStream);
 		}
+		var output = ((Header) headerItem.getValue()).outputPath().get();
+		new Alert(AlertType.INFORMATION, STR."Successfully generated bindings at \{output}.", ButtonType.OK).show();
 	}
 
 	/**
