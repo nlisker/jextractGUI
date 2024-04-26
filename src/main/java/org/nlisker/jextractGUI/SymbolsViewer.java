@@ -313,13 +313,17 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		task.exceptionProperty().subscribe((__, ex) -> {
 			ex.printStackTrace();
 			String message = ex.getMessage();
+			if (message.contains("file not found")) {
+				message = ex.getMessage().replace("fatal error: ", "");
+				message += ".\nAdd the including folders to the Includes list and click Reload ⟳.";
+				addErrorButtonsForHeader(headerItem, message);
+				addHeaderItem(headerItem);
+				new Alert(AlertType.INFORMATION, message, ButtonType.OK).show();
+				return;
+			}
 			if (message.contains("clang")) {
 				message = "clang not found on the PATH variable. On Windows, add the /bin dir of the jextract binaries to the PATH, "
 						+ "and on MacOS and Linux add the /lib dir. Then restart the application.";
-			} else if (message.contains("file not found")) {
-				message = ex.getMessage() + ": Add the including folders to the Includes list and click Reload ⟳.";
-				addErrorButtonsForHeader(headerItem, message);
-				addHeaderItem(headerItem);
 			}
 			new Alert(AlertType.ERROR, message, ButtonType.OK).show();
 		});
