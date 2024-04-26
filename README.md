@@ -18,7 +18,7 @@ jextractGUI does not ship with all the binaries needed for each operating system
 
 ## Building and running from source
 
-* From Gradle: use the provided Gradle wrapper. The Ppre-built executables below were created with `jpackageImage`.
+* From Gradle: use the provided Gradle wrapper. The pre-built executables below were created with `jpackageImage`.
 * From the IDE: compile with `--enable-preview` and run with `--enable-preview --enable-native-access=org.openjdk.jextract` (these are already configured in Gradle).
 
 ## Download
