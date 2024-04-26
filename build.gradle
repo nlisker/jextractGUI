@@ -1,4 +1,3 @@
-// jextractGUI //
 plugins {
 	id "application"
 	id "org.openjfx.javafxplugin" version "+"
@@ -6,6 +5,8 @@ plugins {
 	id "io.freefair.lombok" version "+"
 	id "eclipse"
 }
+
+version = "0.1.0"
 
 ext {
 	javaVersion = "22";
