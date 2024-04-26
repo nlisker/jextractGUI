@@ -18,9 +18,9 @@ jextractGUI does not ship with all the binaries needed for each operating system
 
 ## Building and running from source
 
-* From Gradle: use the provided Gradle wrapper. Some of the useful tasks are `build`, `run`, `jlink` (creates a standalone runtime with a launcher) and `jpackageImage` (adds a native executable to the `jlink` output for convenience). Execute `tasks` to see all tasks.
-* From the IDE: compile and run with `--enable-preview` and run with `--enable-native-access=org.openjdk.jextract` (these are already configured in Gradle).
+* From Gradle: use the provided Gradle wrapper. The Ppre-built executables below were created with `jpackageImage`.
+* From the IDE: compile with `--enable-preview` and run with `--enable-preview --enable-native-access=org.openjdk.jextract` (these are already configured in Gradle).
 
 ## Download
 
-Pre-built executables (using jpackage) for Windows, Linux, and MacOS are available here.
+Pre-built executables (using jpackage) for Windows, Linux, and MacOS are available under [Releases](https://github.com/nlisker/jextractGUI/releases).
