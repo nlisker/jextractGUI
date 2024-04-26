@@ -46,8 +46,8 @@ final class LibrariesViewer extends FileListViewer {
 	@Override
 	public Optional<File> parseText(String text) {
 		return text.startsWith(":") ?
-			Optional.of(text).map(File::new).filter(file -> isValidFile(new File(text.substring(1)))) :
-			Optional.of(text).map(File::new).filter(file -> file.toPath().getNameCount() == 1);
+			Optional.of(new File(text)).filter(file -> isValidFile(new File(text.substring(1)))) :
+			Optional.of(new File(text)).filter(file -> file.toPath().getNameCount() == 1).map(file -> new File(file.getName()));
 	}
 
 	@Override
@@ -66,7 +66,7 @@ final class LibrariesViewer extends FileListViewer {
 
 	@Override
 	public Optional<File> parseDnDPath(Path path) {
-		return Optional.of(path.toFile()).filter(this::isValidFile);
+		return Optional.of(path.toFile()).filter(this::isValidFile).map(this::parseSelectedFile);
 	}
 
 	private boolean isValidFile(File file) {
