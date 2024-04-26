@@ -7,11 +7,14 @@ import java.util.function.Function;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
 import javafx.scene.text.Text;
 
 import lombok.AccessLevel;
@@ -43,17 +46,17 @@ abstract class FileListViewer extends BorderPane implements TextInput<File>, Fil
 		listView.setEditable(true);
 		listView.setPrefHeight(150);
 		listView.setOnKeyPressed(e -> { if (e.getCode() == KeyCode.DELETE) removeSelected(); });
-//		listView.setCellFactory(listView ->
-//			new ListCell<File>() {
-//				{
-//					textProperty().bind(itemProperty().map(File::toString));
-//					fontProperty().bind(textProperty().map(text -> {
-//						var defFont = Font.getDefault();
-//						return text.startsWith(":") ? defFont :  Font.font(defFont.getFamily(), FontPosture.ITALIC, defFont.getSize());
-//					}));
-//				}
-//			}
-//		);
+
+		var defFont = Font.getDefault();
+		var italicFont = Font.font(defFont.getFamily(), FontPosture.ITALIC, defFont.getSize());
+		listView.setCellFactory(listView ->
+			new ListCell<File>() {
+				{
+					textProperty().bind(itemProperty().map(File::toString));
+					fontProperty().bind(textProperty().map(text -> text.startsWith(":") ? defFont :  italicFont).orElse(defFont));
+				}
+			}
+		);
 	}
 
 	private void createControls(String titleText, CLOption option, String tooltipText, String promptText) {
