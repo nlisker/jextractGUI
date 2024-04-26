@@ -50,10 +50,10 @@ abstract class FileListViewer extends BorderPane implements TextInput<File>, Fil
 		var defFont = Font.getDefault();
 		var italicFont = Font.font(defFont.getFamily(), FontPosture.ITALIC, defFont.getSize());
 		listView.setCellFactory(listView ->
-			new ListCell<File>() {
+			new ListCell<>() {
 				{
 					textProperty().bind(itemProperty().map(File::toString));
-					fontProperty().bind(textProperty().map(text -> text.startsWith(":") ? defFont :  italicFont).orElse(defFont));
+					fontProperty().bind(textProperty().map(text -> text.startsWith(":") ? defFont : italicFont).orElse(defFont));
 				}
 			}
 		);
