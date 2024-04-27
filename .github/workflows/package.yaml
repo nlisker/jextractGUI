@@ -1,6 +1,6 @@
 name: Package
 
-on: workflow_dispatch #push
+on: push # workflow_dispatch
 
 jobs:
   package:
@@ -30,8 +30,9 @@ jobs:
     - name: Create jpackage image
       run: ./gradlew jpackageImage
 
-    - name: Upload
-      uses: actions/upload-artifact@v4
+    - name: Upload ro reealse
+      uses: ncipollo/release-action@v1
       with:
-        name: jextractGUI-${{ matrix.os }}
-        path: build/jpackage/jextractGUI*
+#        name: jextractGUI-${{ matrix.os }}-x64
+        artifacts: build/jpackage/jextractGUI*
+        generateReleaseNotes: true
