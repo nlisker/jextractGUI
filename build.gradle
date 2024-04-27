@@ -1,6 +1,7 @@
 plugins {
 	id "application"
 	id "org.openjfx.javafxplugin" version "+"
+	id "com.google.osdetector" version "+"
 	id "org.beryx.jlink" version "+"
 	id "io.freefair.lombok" version "+"
 	id "eclipse"
@@ -69,6 +70,15 @@ eclipse.classpath {
 	}
 }
 
+var iconSuffix;
+switch (osdetector.os) {
+	case "windows": iconSuffix = "ico"
+		break
+	case "linux": iconSuffix = "png"
+		break
+	case "macos": iconSuffix = "icns"
+		break
+}
 jlink {
 	options = ["--strip-debug",
 			   "--compress", "zip-6",
@@ -81,7 +91,7 @@ jlink {
 		noConsole = true
 	}
 	jpackage {
-		icon = "src/main/resources/icon.ico" // TODO: only works for Windows, other OS's need a different format
+		icon = "src/main/resources/icon." + iconSuffix
 		imageOptions = ["--app-content", "LICENSE.txt"]
 		imageOptions += ["--app-content", "NOTICE.txt"]
 	}
