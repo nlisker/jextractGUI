@@ -97,6 +97,17 @@ jlink {
 	}
 }
 
+tasks.register("jpackageImageZip", Zip) {
+	group = "build"
+	description = "Creates a Zips of the jpackage image"
+	
+	dependsOn tasks.jpackageImage
+
+    archiveFileName = "jextractGUI-" + osdetector.os + "-x64.zip"
+    destinationDirectory = layout.buildDirectory
+    from layout.buildDirectory.dir("jpackage")
+}
+
 tasks.named("wrapper") {
 	gradleVersion = gradleWrapperVersion
 }
