@@ -30,9 +30,10 @@ jobs:
     - name: Create jpackage image
       run: ./gradlew jpackageImage
 
-    - name: Upload ro reealse
+    - name: Upload to reealse
       uses: ncipollo/release-action@v1
       with:
 #        name: jextractGUI-${{ matrix.os }}-x64
         artifacts: build/jpackage/jextractGUI*
         generateReleaseNotes: true
+        tag: v1.0.0
