@@ -97,13 +97,14 @@ jlink {
 	}
 }
 
+var osName = osdetector.os == "linux" ? "ubuntu" : osdetector.os; // matching the yml file
 tasks.register("jpackageImageZip", Zip) {
 	group = "build"
 	description = "Creates a Zips of the jpackage image"
 	
 	dependsOn tasks.jpackageImage
 
-    archiveFileName = "jextractGUI-" + osdetector.os + "-x64.zip"
+    archiveFileName = "jextractGUI-" + osName + "-x64.zip"
     destinationDirectory = layout.buildDirectory
     from layout.buildDirectory.dir("jpackage")
 }

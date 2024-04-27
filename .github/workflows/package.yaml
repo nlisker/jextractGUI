@@ -29,13 +29,13 @@ jobs:
       if: runner.os != 'Windows'
       run: chmod +x ./gradlew
 
-    - name: Create jpackage image
-      run: ./gradlew jpackageImage
+    - name: Create a zipped jpackage image
+      run: ./gradlew jpackageImageZip
 
     - name: Upload to release
       uses: ncipollo/release-action@v1
       with:
 #        name: jextractGUI-${{ matrix.os }}-x64
-        artifacts: build/jpackage/jextractGUI*
+        artifacts: build/jextractGUI-${{ matrix.os }}-x64.zip
         generateReleaseNotes: true
         tag: v1.0.0
