@@ -81,7 +81,9 @@ jlink {
 		noConsole = true
 	}
 	jpackage {
-		icon = "src/main/resources/icon.ico" // only works for Windows, other OS's need a different format
+		icon = "src/main/resources/icon.ico" // TODO: only works for Windows, other OS's need a different format
+		imageOptions = ["--app-content", "LICENSE.txt"]
+		imageOptions += ["--app-content", "NOTICE.txt"]
 	}
 }
 
