@@ -6,7 +6,7 @@ plugins {
 	id "eclipse"
 }
 
-version = "0.1.0"
+version = "1.0.0" // TODO :add release plugin?
 
 ext {
 	javaVersion = "22";
@@ -80,7 +80,7 @@ jlink {
 				   "--enable-native-access", "org.openjdk.jextract"]
 		noConsole = true
 	}
-	jpackage {
+	jpackage { // TODO: add license
 		icon = "src/main/resources/icon.ico" // TODO: only works for Windows, other OS's need a different format
 		imageOptions = ["--app-content", "LICENSE.txt"]
 		imageOptions += ["--app-content", "NOTICE.txt"]
