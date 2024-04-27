@@ -80,7 +80,7 @@ jlink {
 				   "--enable-native-access", "org.openjdk.jextract"]
 		noConsole = true
 	}
-	jpackage { // TODO: add license
+	jpackage {
 		icon = "src/main/resources/icon.ico" // TODO: only works for Windows, other OS's need a different format
 		imageOptions = ["--app-content", "LICENSE.txt"]
 		imageOptions += ["--app-content", "NOTICE.txt"]
