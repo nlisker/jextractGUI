@@ -8,6 +8,8 @@ jobs:
       matrix:
         os: [ubuntu, windows] #macos
     runs-on: ${{ matrix.os }}-latest
+    permissions:
+      contents: write
     steps:
     - name: Checkout sources
       uses: actions/checkout@v4
@@ -30,7 +32,7 @@ jobs:
     - name: Create jpackage image
       run: ./gradlew jpackageImage
 
-    - name: Upload to reealse
+    - name: Upload to release
       uses: ncipollo/release-action@v1
       with:
 #        name: jextractGUI-${{ matrix.os }}-x64
