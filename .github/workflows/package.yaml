@@ -39,3 +39,4 @@ jobs:
         artifacts: build/jextractGUI-${{ matrix.os }}-x64.zip
         generateReleaseNotes: true
         tag: v1.0.0
+        allowUpdates: true
