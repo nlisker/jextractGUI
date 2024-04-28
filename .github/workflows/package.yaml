@@ -10,7 +10,7 @@ jobs:
   package:
     strategy:
       matrix:
-        os: [macos] #ubuntu windows
+        os: [macos, ubuntu] # windows
     runs-on: ${{ matrix.os }}-latest
     steps:
     - name: Checkout sources

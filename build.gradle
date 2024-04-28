@@ -70,7 +70,6 @@ tasks.withType(JavaExec) {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	println(osdetector.os)
 	options.compilerArgs.add("--enable-preview")
 	options.setEncoding("UTF-8")
 }
@@ -93,10 +92,9 @@ switch (osdetector.os) {
 		break
 	case "linux": iconSuffix = "png"
 		break
-	case "macos": iconSuffix = "icns"
+	case "osx": iconSuffix = "icns"
 		break
 }
-println(osdetector.os)
 
 jlink {
 	options = ["--strip-debug",
@@ -116,7 +114,8 @@ jlink {
 	}
 }
 
-var osName = osdetector.os == "linux" ? "ubuntu" : osdetector.os; // matching the yaml file
+var osName = osdetector.os == "linux" ? osdetector.release : osdetector.os; // matching the yaml file
+println(osName)
 tasks.register("jpackageImageZip", Zip) {
 	group = "build"
 	description = "Creates a Zips of the jpackage image"
