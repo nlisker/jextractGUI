@@ -38,6 +38,6 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: jextractGUI-${{ matrix.os }}-x64.zip
-        path: build/jextractGUI-${{ matrix.os }}-x64.zip
+        path: build
         if-no-files-found: error
         retention-days: 1
