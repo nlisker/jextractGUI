@@ -15,6 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
     permissions:
       contents: write
+    needs: [package]
     steps:
     - name: Upload to release
       uses: ncipollo/release-action@v1 #https://github.com/ncipollo/release-action
