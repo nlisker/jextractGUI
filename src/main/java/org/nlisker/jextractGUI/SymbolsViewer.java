@@ -359,7 +359,6 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 	private void populateHeaderSymbols(CheckBoxTreeItem<Displayable> headerItem) {
 		var header = (Header) headerItem.getValue();
 		Map<IncludeKind, List<Declaration>> symbols = mapSymbols(header.file(), header.includes());
-		System.out.println(symbols);
 
 		symbols.forEach((includeKind, declarations) -> {
 			var includeKindDisplay = new IncludeKindDisplay(includeKind, declarations.size());
@@ -400,7 +399,6 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 			System.setErr(newErrorStream);
 
 			List<String> commandForHeader = createArgsForHeader(headerItem);
-			System.out.println("running " + commandForHeader);
 			jextract.run(System.out, System.err, commandForHeader.toArray(new String[0]));
 
 			System.err.flush();
