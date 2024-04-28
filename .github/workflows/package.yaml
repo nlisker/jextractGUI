@@ -10,7 +10,7 @@ jobs:
   package:
     strategy:
       matrix:
-        os: [ubuntu, windows] #macos
+        os: [ubuntu] #, windows] macos
     runs-on: ${{ matrix.os }}-latest
     steps:
     - name: Checkout sources
@@ -31,5 +31,13 @@ jobs:
       if: runner.os != 'Windows'
       run: chmod +x ./gradlew
 
-    - name: Create a zipped jpackage image
-      run: ./gradlew jpackageImageZip
+    - name: Create jpackage image
+      run: ./gradlew jpackageImage
+
+    - name: Upload packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: jextractGUI-${{ matrix.os }}-x64
+        path: build/jpackage/jextractGUI*
+        if-no-files-found: error
+        retention-days: 1
