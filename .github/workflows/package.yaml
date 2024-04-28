@@ -39,3 +39,4 @@ jobs:
         generateReleaseNotes: true
         tag: v1.0.0-shapshot
         allowUpdates: true
+        draft: true
