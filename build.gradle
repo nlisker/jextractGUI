@@ -18,12 +18,12 @@ plugins {
 	id "application"
 	id "org.openjfx.javafxplugin" version "+"
 	id "com.google.osdetector" version "+"
-	id "org.beryx.jlink" version "+"
+	id "org.beryx.jlink" version "+" // https://badass-jlink-plugin.beryx.org
 	id "io.freefair.lombok" version "+"
 	id "eclipse"
 }
 
-version = "1.0.0" // TODO :add release plugin?
+version = "0.1.0" // TODO :add release plugin?
 
 ext {
 	javaVersion = "22";
@@ -113,7 +113,7 @@ jlink {
 	}
 }
 
-var osName = osdetector.os == "linux" ? "ubuntu" : osdetector.os; // matching the yml file
+var osName = osdetector.os == "linux" ? "ubuntu" : osdetector.os; // matching the yaml file
 tasks.register("jpackageImageZip", Zip) {
 	group = "build"
 	description = "Creates a Zips of the jpackage image"
