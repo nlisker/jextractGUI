@@ -30,3 +30,4 @@ jobs:
         tag: v1.0.1-shapshot
         allowUpdates: true
         draft: true
+        artifactErrorsFailBuild: true
