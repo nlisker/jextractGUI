@@ -23,9 +23,6 @@ jobs:
         name: jextractGUI-${{ matrix.os }}-x64.zip
         path: build
 
-    - name: Display structure of downloaded files
-      run: ls -R
-
     - name: Upload to release
       uses: ncipollo/release-action@v1 #https://github.com/ncipollo/release-action
       with:
