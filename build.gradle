@@ -95,8 +95,9 @@ switch (osdetector.os) {
 	case "osx": iconSuffix = "icns"
 		break
 }
-
 jlink {
+//	targetPlatform("mac","C:/Users/Nir/Desktop/jx/jdk-22.0.1.jdk/Contents/Home")
+
 	options = ["--strip-debug",
 			   "--compress", "zip-6",
 			   "--no-header-files",
@@ -115,11 +116,10 @@ jlink {
 }
 
 var osName = osdetector.os == "linux" ? osdetector.release : osdetector.os; // matching the yaml file
-println(osName)
 tasks.register("jpackageImageZip", Zip) {
 	group = "build"
 	description = "Creates a Zips of the jpackage image"
-	
+
 	dependsOn tasks.jpackageImage
 
     archiveFileName = "jextractGUI-" + osName + "-x64.zip"
