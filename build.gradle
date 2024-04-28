@@ -78,11 +78,7 @@ eclipse.classpath {
 	downloadJavadoc = true
 	downloadSources = true
 	file.whenMerged {
-		entries.findAll {
-			it.kind == 'lib' && it.getEntryAttributes().get("test") != "true"
-		}.each {
-			it.entryAttributes["module"] = "true"
-		}
+		entries.find { it.getPath().contains("jextract.jar") }.each { it.entryAttributes["module"] = "true"	}
 	}
 }
 
@@ -96,8 +92,6 @@ switch (osdetector.os) {
 		break
 }
 jlink {
-//	targetPlatform("mac","C:/Users/Nir/Desktop/jx/jdk-22.0.1.jdk/Contents/Home")
-
 	options = ["--strip-debug",
 			   "--compress", "zip-6",
 			   "--no-header-files",
