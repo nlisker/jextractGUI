@@ -1,0 +1,26 @@
+name: Release
+
+on: [
+  push,
+  workflow_dispatch
+  ]
+
+jobs:
+  package:
+    uses: ./.github/workflows/package.yml
+  release:
+    strategy:
+      matrix:
+        os: [ubuntu, windows] #macos
+    runs-on: ${{ matrix.os }}-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Upload to release
+      uses: ncipollo/release-action@v1 #https://github.com/ncipollo/release-action
+      with:
+        artifacts: build/jextractGUI-${{ matrix.os }}-x64.zip
+        generateReleaseNotes: true
+        tag: v1.0.1-shapshot
+        allowUpdates: true
+        draft: true
