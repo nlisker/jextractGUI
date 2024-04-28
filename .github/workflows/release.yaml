@@ -20,7 +20,8 @@ jobs:
     - name: Download packages
       uses: actions/download-artifact@v4
       with:
-        name: jextractGUI-${{ matrix.os }}-x64
+        name: jextractGUI-${{ matrix.os }}-x64.zip
+        path: build
 
     - name: Display structure of downloaded files
       run: ls -R
@@ -28,7 +29,7 @@ jobs:
     - name: Upload to release
       uses: ncipollo/release-action@v1 #https://github.com/ncipollo/release-action
       with:
-        artifacts: jextractGUI-${{ matrix.os }}-x64.zip
+        artifacts: build/jextractGUI-${{ matrix.os }}-x64.zip
         generateReleaseNotes: true
         tag: v1.0.1-shapshot
         allowUpdates: true

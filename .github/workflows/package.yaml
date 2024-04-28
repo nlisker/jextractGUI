@@ -31,13 +31,13 @@ jobs:
       if: runner.os != 'Windows'
       run: chmod +x ./gradlew
 
-    - name: Create jpackage image
-      run: ./gradlew jpackageImage
+    - name: Create zipped jpackage image
+      run: ./gradlew jpackageImageZip
 
     - name: Upload packages
       uses: actions/upload-artifact@v4
       with:
-        name: jextractGUI-${{ matrix.os }}-x64
-        path: build/jpackage/jextractGUI*
+        name: jextractGUI-${{ matrix.os }}-x64.zip
+        path: build
         if-no-files-found: error
         retention-days: 1
