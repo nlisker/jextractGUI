@@ -22,10 +22,13 @@ jobs:
       with:
         name: jextractGUI-${{ matrix.os }}-x64
 
+    - name: Display structure of downloaded files
+      run: ls -R
+
     - name: Upload to release
       uses: ncipollo/release-action@v1 #https://github.com/ncipollo/release-action
       with:
-        artifacts: jextractGUI-${{ matrix.os }}-x64
+        artifacts: jextractGUI-${{ matrix.os }}-x64.zip
         generateReleaseNotes: true
         tag: v1.0.1-shapshot
         allowUpdates: true
