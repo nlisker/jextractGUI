@@ -13,6 +13,22 @@ on:
           - ubuntu
           - ubuntu, windows, macos
         default: ubuntu, windows, macos
+      print_tags:
+        description: 'True to print to STDOUT'
+        required: true
+        type: boolean
+      print_tags_2:
+        description: '2 True to print to STDOUT'
+        required: true
+        type: boolean
+      tags:
+        description: 'Test scenario tags'
+        required: true
+        type: string
+      environment:
+        description: 'Environment to run tests against'
+        type: environment
+        required: true
 
 jobs:
   package:
