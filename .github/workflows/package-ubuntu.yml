@@ -1,4 +1,4 @@
-name: Package win
+name: Package ubuntu
 
 on: [
   #push,
@@ -10,4 +10,4 @@ jobs:
   package:
     uses: ./.github/workflows/package.yml
     with:
-      os: windows
+      os: ubuntu

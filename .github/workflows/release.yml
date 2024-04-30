@@ -1,18 +1,17 @@
 name: Release
 
-on: [
-  #push,
-  workflow_dispatch
-  ]
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
 
 jobs:
   package:
-    uses: ./.github/workflows/package.yaml
+    uses: ./.github/workflows/package-${{ inputs.os }}.yml
   release:
-    strategy:
-      matrix:
-        os: [ubuntu] #, windows] macos
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ inputs.os }}-latest
     permissions:
       contents: write
     needs: [package]
@@ -20,13 +19,13 @@ jobs:
     - name: Download packages
       uses: actions/download-artifact@v4
       with:
-        name: jextractGUI-${{ matrix.os }}-x64.zip
+        name: jextractGUI-${{ inputs.os }}-x64.zip
         path: build
 
     - name: Upload to release
       uses: ncipollo/release-action@v1 #https://github.com/ncipollo/release-action
       with:
-        artifacts: build/jextractGUI-${{ matrix.os }}-x64.zip
+        artifacts: build/jextractGUI-${{ inputs.os }}-x64.zip
         generateReleaseNotes: true
         tag: v1.0.1-shapshot
         allowUpdates: true

@@ -1,4 +1,4 @@
-name: Package mac
+name: Package macos
 
 on: [
   #push,

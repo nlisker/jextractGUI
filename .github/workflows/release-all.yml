@@ -1,0 +1,15 @@
+name: Release all
+
+on: [
+  #push,
+  workflow_dispatch
+  ]
+
+jobs:
+  release:
+    strategy:
+      matrix:
+        os: [ubuntu, windows, macos]
+    uses: ./.github/workflows/release.yml
+    with:
+      os: ${{ matrix.os }}

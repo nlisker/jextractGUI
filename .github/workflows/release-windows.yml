@@ -1,0 +1,12 @@
+name: Release win
+
+on: [
+  #push,
+  workflow_dispatch,
+  ]
+
+jobs:
+  release:
+    uses: ./.github/workflows/release.yml
+    with:
+      os: windows

@@ -1,0 +1,12 @@
+name: Release ubuntu
+
+on: [
+  #push,
+  workflow_dispatch,
+  ]
+
+jobs:
+  release:
+    uses: ./.github/workflows/release.yml
+    with:
+      os: ubuntu
