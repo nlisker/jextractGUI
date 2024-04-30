@@ -1,0 +1,51 @@
+name: Package by choice
+
+on:
+  workflow_dispatch:
+    inputs:
+      os:
+        description: "Operating System"
+        required: true
+        type: choice
+        options:
+          - windows
+          - macos
+          - ubuntu
+          - ubuntu, windows, macos
+        default: ubuntu, windows, macos
+
+jobs:
+  package:
+    strategy:
+      matrix:
+        os: ["${{ github.event.inputs.os }}"]
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+    - name: Checkout sources
+      uses: actions/checkout@v4
+
+    - name: Setup Java 
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: |
+          22
+          21
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+
+    - name: Make gradlew executable on Linux/MacOS
+      if: runner.os != 'Windows'
+      run: chmod +x ./gradlew
+
+    - name: Create zipped jpackage image
+      run: ./gradlew jpackageImageZip
+
+    - name: Upload packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: jextractGUI-${{ inputs.os }}-x64.zip
+        path: build/jextractGUI*.zip
+        if-no-files-found: error
+        retention-days: 1
