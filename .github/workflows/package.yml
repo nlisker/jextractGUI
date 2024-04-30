@@ -1,17 +1,15 @@
 name: Package
 
-on: [
-  #push,
-  workflow_dispatch,
-  workflow_call
-  ]
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
 
 jobs:
   package:
-    strategy:
-      matrix:
-        os: [ubuntu, windows] #macos
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ inputs.os }}-latest
     steps:
     - name: Checkout sources
       uses: actions/checkout@v4
@@ -37,7 +35,7 @@ jobs:
     - name: Upload packages
       uses: actions/upload-artifact@v4
       with:
-        name: jextractGUI-${{ matrix.os }}-x64.zip
+        name: jextractGUI-${{ inputs.os }}-x64.zip
         path: build/jextractGUI*.zip
         if-no-files-found: error
         retention-days: 1

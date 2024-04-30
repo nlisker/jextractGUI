@@ -1,0 +1,16 @@
+name: Package all
+
+on: [
+  #push,
+  workflow_dispatch,
+  workflow_call
+  ]
+
+jobs:
+  package-all:
+    strategy:
+      matrix:
+        os: [ubuntu, windows, macos]
+    uses: ./.github/workflows/package.yml
+    with:
+      os: ${{ matrix.os }}

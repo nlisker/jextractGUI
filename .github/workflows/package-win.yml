@@ -1,0 +1,13 @@
+name: Package win
+
+on: [
+  #push,
+  workflow_dispatch,
+  workflow_call
+  ]
+
+jobs:
+  package-win:
+    uses: ./.github/workflows/package.yml
+    with:
+      os: windows
