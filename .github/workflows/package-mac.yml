@@ -7,7 +7,7 @@ on: [
   ]
 
 jobs:
-  package-win:
+  package:
     uses: ./.github/workflows/package.yml
     with:
       os: macos

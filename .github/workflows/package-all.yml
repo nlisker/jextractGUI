@@ -7,7 +7,7 @@ on: [
   ]
 
 jobs:
-  package-all:
+  package:
     strategy:
       matrix:
         os: [ubuntu, windows, macos]
