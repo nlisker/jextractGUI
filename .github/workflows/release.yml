@@ -15,9 +15,9 @@ on:
 
 jobs:
   package:
-    uses: ./.github/workflows/package.yml
+    uses: ./.github/workflows/package-choice.yml
     with:
-      os: '${{ fromJson(inputs.os) }}'
+      os: ${{ fromJson(inputs.os) }}
 
   release:
     strategy:
