@@ -20,6 +20,15 @@ jobs:
         os: ${{ fromJson(inputs.os) }}
     runs-on: ${{ matrix.os }}-latest
     steps:
+    - name: Check1
+      run: echo '${{ matrix.os - latest}}'
+
+    - name: Check2
+      run: echo '${{ fromJson(inputs.os) }}'
+      
+    - name: Check2
+      run: echo '${{ matrix.os - latest}}'
+
     - name: Checkout sources
       uses: actions/checkout@v4
 
