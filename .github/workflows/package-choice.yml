@@ -8,17 +8,17 @@ on:
         required: true
         type: choice
         options:
-          - windows-latest
-          - macos-latest
-          - ubuntu-latest
-          - ubuntu-latest, windows-latest, macos-latest
+          - '["windows"]'
+          - '["macos"]'
+          - '["ubuntu"]'
+          - '["ubuntu", "macos", "windows"]'
 
 jobs:
   package:
     strategy:
       matrix:
-        os: ["${{ github.event.inputs.os }}"]
-    runs-on: ${{ matrix.os }}
+        os: ${{ fromJson(inputs.os) }}
+    runs-on: ${{ matrix.os }}-latest
     steps:
     - name: Checkout sources
       uses: actions/checkout@v4
