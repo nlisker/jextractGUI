@@ -15,7 +15,7 @@ on:
 
 jobs:
   package:
-    uses: ./.github/workflows/package-choice.yml
+    uses: ./.github/workflows/package.yml
     with:
       os: ${{ fromJson(inputs.os) }}
 
