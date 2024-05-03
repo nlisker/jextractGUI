@@ -109,7 +109,8 @@ jlink {
 	}
 }
 
-var osName = osdetector.os == "linux" ? osdetector.release : osdetector.os; // matching the yaml file
+// For linux, we need the specific distribution to match the github workflow runner (ubuntu)
+var osName = osdetector.os == "linux" ? "ubuntu" : osdetector.os;
 tasks.register("jpackageImageZip", Zip) {
 	group = "build"
 	description = "Creates a Zips of the jpackage image"
