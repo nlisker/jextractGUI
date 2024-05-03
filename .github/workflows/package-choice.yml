@@ -24,7 +24,7 @@ jobs:
       run: echo '${{ matrix.os }}'
 
     - name: Check2
-      run: echo '${{ fromJson(inputs.os) }}'
+      run: echo ${{ fromJson(inputs.os) }}
       
     - name: Check2
       run: echo '${{ matrix.os}}-latest'
@@ -53,7 +53,7 @@ jobs:
     - name: Upload packages
       uses: actions/upload-artifact@v4
       with:
-        name: jextractGUI-${{ inputs.os }}-x64.zip
+        name: jextractGUI-${{ matrix.os }}-x64.zip
         path: build/jextractGUI*.zip
         if-no-files-found: error
         retention-days: 1
