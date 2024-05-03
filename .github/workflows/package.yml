@@ -46,7 +46,7 @@ jobs:
     - name: Create zipped jpackage image
       run: ./gradlew jpackageImageZip
 
-    - name: Upload packages
+    - name: Upload zipped image
       uses: actions/upload-artifact@v4
       with:
         name: jextractGUI-${{ matrix.os }}-x64.zip
