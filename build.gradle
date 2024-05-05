@@ -19,12 +19,11 @@ plugins {
 	id "org.openjfx.javafxplugin" version "+"
 	id "io.freefair.lombok" version "+"
 	id "com.google.osdetector" version "+"
-	id "pl.allegro.tech.build.axion-release" version "+"
 	id "org.beryx.jlink" version "+" // https://badass-jlink-plugin.beryx.org
 	id "eclipse"
 }
 
-version = scmVersion.version
+version = "1.0.0"
 
 ext {
 	javaVersion = "22";
