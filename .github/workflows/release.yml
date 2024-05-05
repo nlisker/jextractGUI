@@ -48,15 +48,15 @@ jobs:
         name: jextractGUI-${{ matrix.os }}-x64.zip
         path: build
 
-    - name: echo git tag
-      run: echo "${{ github.event.release.tag_name }}"
-
     - name: Upload to release
       uses: ncipollo/release-action@v1 #https://github.com/ncipollo/release-action
       with:
         artifacts: build/jextractGUI-${{ matrix.os }}-x64.zip
         generateReleaseNotes: true
-        tag: v1.0.1-shapshot
+        tag: ${{ github.ref_name }}
         allowUpdates: true
         draft: true
         artifactErrorsFailBuild: true
+
+    - name: Print result
+      run: echo "Released jextractGUI-${{ matrix.os }}-x64.zip to ${{ github.event.release.tag_name }}"
