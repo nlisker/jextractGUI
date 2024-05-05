@@ -17,13 +17,14 @@
 plugins {
 	id "application"
 	id "org.openjfx.javafxplugin" version "+"
-	id "com.google.osdetector" version "+"
-	id "org.beryx.jlink" version "+" // https://badass-jlink-plugin.beryx.org
 	id "io.freefair.lombok" version "+"
+	id "com.google.osdetector" version "+"
+	id "pl.allegro.tech.build.axion-release" version "+"
+	id "org.beryx.jlink" version "+" // https://badass-jlink-plugin.beryx.org
 	id "eclipse"
 }
 
-version = "0.1.0" // TODO :add release plugin?
+version = scmVersion.version
 
 ext {
 	javaVersion = "22";
