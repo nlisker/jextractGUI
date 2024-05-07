@@ -37,6 +37,10 @@ jobs:
     - name: Checkout sources
       uses: actions/checkout@v4
     
+    - name: Make gradlew executable on Linux/MacOS
+      if: runner.os != 'Windows'
+      run: chmod +x ./gradlew
+    
     - name: Get the project version
       id: versioning
       run: echo "VERSION=$(${{github.workspace}}/gradlew -q printVersion)" >> "$GITHUB_OUTPUT"
