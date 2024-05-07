@@ -36,9 +36,9 @@ jobs:
     steps:
     - name: Get the project version
       id: versioning
-      run: echo "version=./gradlew printVersion" >> "$GITHUB_OUTPUT"
+      run: echo "VERSION=$(${{github.workspace}}/gradlew -q printVersionInformation)" >> "$GITHUB_OUTPUT"
 
     - name: Print version
       env:
         version: ${{ steps.versioning.outputs.version }}
-      run: echo "The version is $version"
+      run: echo "The version is $VERSION"
