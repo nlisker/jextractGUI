@@ -122,6 +122,14 @@ tasks.register("jpackageImageZip", Zip) {
     from layout.buildDirectory.dir("jpackage")
 }
 
+tasks.register("printVersion") {
+	group = "help"
+	description = "Prints the project version"
+	doLast {
+		println(project.version)
+	}
+}
+
 tasks.named("wrapper") {
 	gradleVersion = gradleWrapperVersion
 }
