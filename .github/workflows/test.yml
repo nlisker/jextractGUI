@@ -34,9 +34,12 @@ jobs:
         os: ${{ fromJson(inputs.os) }}
     runs-on: ${{ matrix.os }}-latest
     steps:
+    - name: Checkout sources
+      uses: actions/checkout@v4
+    
     - name: Get the project version
       id: versioning
-      run: echo "VERSION=$(${{github.workspace}}/gradlew -q printVersionInformation)" >> "$GITHUB_OUTPUT"
+      run: echo "VERSION=$(${{github.workspace}}/gradlew -q printVersion)" >> "$GITHUB_OUTPUT"
 
     - name: Print version
       env:
