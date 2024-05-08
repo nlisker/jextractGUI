@@ -67,21 +67,25 @@ jobs:
       if: runner.os != 'Windows'
       run: chmod +x ./gradlew
 
-    - name: Create version variable
-      id: versioning
-      run: echo "version=$(./gradlew -q printVersion)" >> $GITHUB_OUTPUT
-
-    - name: Create artifact name
-      id: naming
-      run: echo "artifact_name=jextractGUI-${{ steps.versioning.outputs.version }}-${{ matrix.os }}-x64.zip" >> $GITHUB_OUTPUT
-
     - name: Create zipped jpackage image
       run: ./gradlew jpackageImageZip
+
+    - name: Set version
+      id: setVersion
+      run: echo "version=$(./gradlew -q printVersion)" >> $GITHUB_OUTPUT
+
+    - name: Set name
+      id: setName
+      run: echo "artifact_name=$(./gradlew -q printArchiveFileName)" >> $GITHUB_OUTPUT
+
+    - name: Set path
+      id: setPath
+      run: echo "artifact_path=$(./gradlew -q printArchiveFilePath)" >> $GITHUB_OUTPUT
 
     - name: Upload zipped image
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ steps.naming.outputs.artifact_name }}
-        path: build/jextractGUI*.zip
+        name: ${{ steps.setName.outputs.artifact_name }} # custom artifact name
+        path: ${{ steps.setPath.outputs.artifact_path }} # path+name of what to upload
         if-no-files-found: error
         retention-days: 1

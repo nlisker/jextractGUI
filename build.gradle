@@ -23,7 +23,7 @@ plugins {
 	id "eclipse"
 }
 
-version = "1.0.0"
+version = "1.0.1"
 
 ext {
 	javaVersion = "22";
@@ -109,22 +109,42 @@ jlink {
 	}
 }
 
-// For linux, we need the specific distribution to match the github workflow runner (ubuntu)
-var osName = osdetector.os == "linux" ? "ubuntu" : osdetector.os;
 tasks.register("jpackageImageZip", Zip) {
 	group = "build"
 	description = "Creates a Zips of the jpackage image"
 
 	dependsOn tasks.jpackageImage
+    from tasks.jpackageImage.imageOutputDir
 
-    archiveFileName = "jextractGUI-" + osName + "-x64.zip"
-    destinationDirectory = layout.buildDirectory
-    from layout.buildDirectory.dir("jpackage")
+	archiveClassifier = osdetector.os + "-" + osdetector.arch
+}
+
+tasks.register("printArchiveFileName") {
+	group = "help"
+	description = "Prints the zipped image file name"
+
+	dependsOn tasks.jpackageImageZip
+
+	doLast {
+		println(tasks.jpackageImageZip.archiveFileName.get())
+	}
+}
+
+tasks.register("printArchiveFilePath") {
+	group = "help"
+	description = "Prints the zipped image full path"
+
+	dependsOn tasks.jpackageImageZip
+
+	doLast {
+		println(tasks.jpackageImageZip.archiveFile.get())
+	}
 }
 
 tasks.register("printVersion") {
 	group = "help"
 	description = "Prints the project version"
+
 	doLast {
 		println(project.version)
 	}
