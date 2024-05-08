@@ -73,7 +73,7 @@ jobs:
 
     - name: Create artifact name
       id: naming
-      run: echo "artifact_name=jextractGUI-${{ matrix.os }}-x64-${{ jobs.package.outputs.version }}.zip" >> $GITHUB_OUTPUT
+      run: echo "artifact_name=jextractGUI-${{ matrix.os }}-x64-${{ outputs.version }}.zip" >> $GITHUB_OUTPUT
 
 #    - name: Create zipped jpackage image
 #      run: ./gradlew jpackageImageZip
