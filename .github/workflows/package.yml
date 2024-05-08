@@ -72,15 +72,21 @@ jobs:
 
     - name: Set version
       id: setVersion
-      run: echo "version=$(./gradlew -q printVersion)" >> $GITHUB_OUTPUT
+      run: |
+        echo "version=$(./gradlew -q printVersion)" >> $GITHUB_OUTPUT
+        echo "version=${{ steps.setVersion.outputs.version }}"
 
     - name: Set name
       id: setName
-      run: echo "artifact_name=$(./gradlew -q printArchiveFileName)" >> $GITHUB_OUTPUT
+      run: |
+        echo "artifact_name=$(./gradlew -q printArchiveFileName)" >> $GITHUB_OUTPUT
+        echo "artifact_name=${{ steps.setName.outputs.artifact_name }}"
 
     - name: Set path
       id: setPath
-      run: echo "artifact_path=$(./gradlew -q printArchiveFilePath)" >> $GITHUB_OUTPUT
+      run: |
+        echo "artifact_path=$(./gradlew -q printArchiveFilePath)" >> $GITHUB_OUTPUT
+        echo "artifact_path=${{ steps.setPath.outputs.artifact_path }}"
 
     - name: Upload zipped image
       uses: actions/upload-artifact@v4
