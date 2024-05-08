@@ -48,6 +48,9 @@ jobs:
         name: ${{ needs.package.outputs.artifact_name }}
         path: build
 
+    - name: Print content
+      uses: echo ls -R
+
     - name: Upload to release
       uses: ncipollo/release-action@v1 #https://github.com/ncipollo/release-action
       with:
