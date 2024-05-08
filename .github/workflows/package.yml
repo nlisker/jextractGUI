@@ -31,6 +31,13 @@ on:
       os:
         required: true
         type: string
+    outputs:
+      version:
+        description: "The version number"
+        value: ${{ jobs.package.outputs.version }}
+      artifact_name:
+        description: "The zipped image file name"
+        value: ${{ jobs.package.outputs.artifact_name }}
 
 jobs:
   package:
@@ -38,6 +45,9 @@ jobs:
       matrix:
         os: ${{ fromJson(inputs.os) }}
     runs-on: ${{ matrix.os }}-latest
+    outputs:
+      version: ${{ steps.versioning.outputs.version }}
+      artifact_name: ${{ steps.naming.outputs.artifact_name }}
     steps:
     - name: Checkout sources
       uses: actions/checkout@v4
@@ -57,13 +67,21 @@ jobs:
       if: runner.os != 'Windows'
       run: chmod +x ./gradlew
 
-    - name: Create zipped jpackage image
-      run: ./gradlew jpackageImageZip
+    - name: Create version variable
+      id: versioning
+      run: echo "version=$(./gradlew -q printVersion)" >> $GITHUB_OUTPUT
+
+    - name: Create artifact name
+      id: naming
+      run: echo "artifact_name=jextractGUI-${{ matrix.os }}-x64-${{ jobs.package.outputs.version }}.zip" >> $GITHUB_OUTPUT
+
+#    - name: Create zipped jpackage image
+#      run: ./gradlew jpackageImageZip
 
     - name: Upload zipped image
       uses: actions/upload-artifact@v4
       with:
-        name: jextractGUI-${{ matrix.os }}-x64.zip
+        name: ${{ jobs.package.outputs.artifact_name }}
         path: build/jextractGUI*.zip
         if-no-files-found: error
         retention-days: 1
