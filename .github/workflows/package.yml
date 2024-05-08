@@ -73,7 +73,7 @@ jobs:
 
     - name: Create artifact name
       id: naming
-      run: echo "artifact_name=jextractGUI-${{ matrix.os }}-x64-${{ outputs.version }}.zip" >> $GITHUB_OUTPUT
+      run: echo "artifact_name=jextractGUI-${{ matrix.os }}-x64-${{ steps.versioning.outputs.version }}.zip" >> $GITHUB_OUTPUT
 
 #    - name: Create zipped jpackage image
 #      run: ./gradlew jpackageImageZip
@@ -81,7 +81,7 @@ jobs:
     - name: Upload zipped image
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ jobs.package.outputs.artifact_name }}
+        name: ${{ steps.naming.outputs.artifact_name }}
         path: build/jextractGUI*.zip
         if-no-files-found: error
         retention-days: 1
