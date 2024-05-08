@@ -72,21 +72,15 @@ jobs:
 
     - name: Set version
       id: setVersion
-      run: |
-        echo "version=$(./gradlew -q printVersion)" >> $GITHUB_OUTPUT
-        echo "version=${{ steps.setVersion.outputs.version }}"
+      run: echo "version=$(./gradlew -q printVersion)" >> $GITHUB_OUTPUT
 
     - name: Set name
       id: setName
-      run: |
-        echo "artifact_name=$(./gradlew -q printArchiveFileName)" >> $GITHUB_OUTPUT
-        echo "artifact_name=${{ steps.setName.outputs.artifact_name }}"
+      run: echo "artifact_name=$(./gradlew -q printArchiveFileName)" >> $GITHUB_OUTPUT
 
     - name: Set path
       id: setPath
-      run: |
-        echo "artifact_path=$(./gradlew -q printArchiveFilePath)" >> $GITHUB_OUTPUT
-        echo "artifact_path=${{ steps.setPath.outputs.artifact_path }}"
+      run: echo "artifact_path=$(./gradlew -q printArchiveFilePath)" >> $GITHUB_OUTPUT
 
     - name: Print vars
       run: |
