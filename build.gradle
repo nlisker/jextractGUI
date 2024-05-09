@@ -100,7 +100,6 @@ jlink {
 		name = "jextractGUI"
 		jvmArgs = ["--enable-preview",
 				   "--enable-native-access", "org.openjdk.jextract"]
-		noConsole = true
 	}
 	jpackage {
 		icon = "src/main/resources/icon." + iconSuffix
