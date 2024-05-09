@@ -45,8 +45,6 @@ jobs:
 
     - name: Print vars
       run: |
-        echo ${{ needs.package.outputs.version }}
-        echo ${{ needs.package.outputs.artifact_name }}
         echo "version=${{ needs.package.outputs.version }}"
         echo "tag=v${{ needs.package.outputs.version }}"
         echo "artifact_name=${{ needs.package.outputs.artifact_name }}"
