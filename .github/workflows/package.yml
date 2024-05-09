@@ -72,7 +72,7 @@ jobs:
       run: chmod +x ./gradlew
 
     - name: Create zipped jpackage image
-      run: ./gradlew jpackageImageZip
+      run: ./gradlew jpackageImageZip --debug
 
     - name: Set version
       id: setVersion
