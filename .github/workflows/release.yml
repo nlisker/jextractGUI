@@ -42,6 +42,13 @@ jobs:
       contents: write
     needs: [package]
     steps:
+
+    - name: Print vars
+      run: |
+        echo "version=${{ needs.package.outputs.version }}"
+        echo "tag=v${{ needs.package.outputs.version }}"
+        echo "artifact_name=${{ needs.package.outputs.artifact_name }}"
+
     - name: Download zipped image
       uses: actions/download-artifact@v4
       with:
