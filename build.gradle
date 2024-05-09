@@ -23,7 +23,7 @@ plugins {
 	id "eclipse"
 }
 
-version = "1.0.1"
+version = "1.0.1" // macOS can't handle versions that start with 0
 
 ext {
 	javaVersion = "22";
