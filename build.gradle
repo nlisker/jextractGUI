@@ -106,6 +106,7 @@ jlink {
 		icon = "src/main/resources/icon." + iconSuffix
 //		imageOptions = ["--app-content", "LICENSE.txt"]
 		imageOptions += ["--app-content", "NOTICE.txt"]
+		imageOptions += ["--verbose"]
 	}
 }
 
