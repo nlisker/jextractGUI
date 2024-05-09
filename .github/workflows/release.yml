@@ -27,6 +27,10 @@ on:
           - '["macos"]'
           - '["ubuntu"]'
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   package:
     uses: ./.github/workflows/package.yml
