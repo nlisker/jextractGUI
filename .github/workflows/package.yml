@@ -46,8 +46,8 @@ jobs:
         os: ${{ fromJson(inputs.os) }}
     runs-on: ${{ matrix.os }}-latest
     outputs:
-      version: ${{ steps.versioning.outputs.version }}
-      artifact_name: ${{ steps.naming.outputs.artifact_name }}
+      version: ${{ steps.setVersion.outputs.version }}
+      artifact_name: ${{ steps.setName.outputs.artifact_name }}
     steps:
     - name: Checkout sources
       uses: actions/checkout@v4
