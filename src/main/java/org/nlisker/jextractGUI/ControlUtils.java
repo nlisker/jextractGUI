@@ -93,7 +93,7 @@ class ControlUtils {
 		button.setOnAction(e -> {
 			var popup = new Alert(AlertType.INFORMATION);
 			popup.setTitle(option.toString());
-			popup.setHeaderText(option.commands().toString() + " " + option.argument());
+			popup.setHeaderText("Specifies " + option.commands().toString() + " " + option.argument());
 			popup.setContentText(option.description());
 			popup.show();
 		});
@@ -158,7 +158,7 @@ class ControlUtils {
 	Node createAndAttachDropHint(Node viewer, ObservableValue<Boolean> visibleCondition) {
 		var color = Color.LIGHTGRAY;
 		var border = new Border(new BorderStroke(color, BorderStrokeStyle.DASHED, new CornerRadii(10), new BorderWidths(3)));
-	
+
 		var icon = FontIcon.of(MaterialDesignA.ARROW_COLLAPSE_DOWN, 90, color);
 		var container = new StackPane(icon);
 		container.setMaxHeight(Region.USE_PREF_SIZE);

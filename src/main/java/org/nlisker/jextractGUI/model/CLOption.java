@@ -33,7 +33,10 @@ public enum CLOption {
 			"""
 			Defines a C preprocessor macro, given as a name-value pair.
 
-			Example: -D A=42
+			Example:
+			  jexctract CLI: -D A=42
+			  jextractGUI: A=42
+			Adds a preprocessor macro defining 'A' as 42.
 			"""),
 
 	CLASS_NAME(List.of("--header-class-name"), "<name>",
@@ -41,9 +44,14 @@ public enum CLOption {
 			The name of the generated header class. If this option is not specified, then the header class name is derived from \
 			the header file name.
 
-			Example: --header-class-name MyClass
+			Example 1:
+			  jexctract CLI: --header-class-name MyClass
+			  jextractGUI: MyClass
 			The class name will be "MyClass".
-			Example:
+
+			Example 2:
+			  jexctract CLI: <absent>
+			  jextractGUI: <empty string>
 			A class named "foo_h" will be generated for a header named "foo.h".
 			"""),
 
@@ -51,31 +59,57 @@ public enum CLOption {
 			"""
 			The name of the package for the generated classes. If this option is not specified, then the unnamed package is used.
 
-			Example: -t com.example.native
+			Example1:
+			  jexctract CLI: -t com.example.native
+			  jextractGUI: com.example.native
 			The package name will be "com.example.native".
-			Example:
+
+			Example 2:
+			  jexctract CLI: <absent>
+			  jextractGUI: <empty string>
 			The package name will be "" (unnamed package).
 			"""),
 
 	INCLUDES_PATH(List.of("--include-dir", "-I"), "<dir>",
 			"""
-			Appends a directory to the include search paths. Include search paths are searched in order.
+			Appends a directory to the include search paths. Include search paths are searched in order. The specified \
+			directories are not searched recursivley.
+			To add a single directory, choose it with the select button (📂) or enter its path in the text field (⮠ ).
+			To add all directory paths in a directory, recuresively, drag and drop (⭳) the directory into the list.
 
-			Example: -I foo -I bar
-			Header files will be searched in "foo" first, then (if nothing is found) in "bar".
+			Example:
+			  jexctract CLI: -I usr/home/foo -I usr/home/bar
+			  jextractGUI:
+			    usr/home/foo
+			    usr/home/bar
+			Header files will be searched in "usr/home/foo" first, then (if nothing is found) in "usr/home/bar".
 			"""),
 
 	LIBRARY_PATH(List.of("--library", "-l"), "<name | path>",
 			"""
-			Specifies a shared library that should be loaded by the generated header class. If the argument starts with :, \
+			Specifies a shared library that should be loaded by the generated header class. If the argument starts with ':', \
 			then it is interpreted as a library path. Otherwise, it denotes a library name.
+			To add a single library path, use any of these methods:
+			  - Drag and drop (⭳) a library file into the list.
+			  - Choose a library file with the select button (📂).
+			  - Enter a library path, starting with ':', in the text field (⮠ ).
+			To add all library paths in a directory, recuresively, drag and drop (⭳) the directory into the list.
+			To add a single library name, enter a (valid) library name in the text field (⮠ ).
 
-			Example: -l GL
-			GL is a library name.
-			Example: -l :libGL.so.1
-			libGL.so.1 is a library path.
-			Example: -l :/usr/lib/libGL.so
-			/usr/lib/libGL.so is a library path.
+			Example 1:
+			  jexctract CLI: -l GL
+			  jexctractGLI: GL
+			Adds a library named "GL".
+
+			Example 2:
+			  jexctract CLI: -l :libGL.so.1
+			  jexctractGLI: :libGL.so.1
+			Adds a library path "libGL.so.1" (in the current directory).
+
+			Example 3:
+			  jexctract CLI: -l :/usr/lib/libGL.so
+			  jexctractGUI: :/usr/lib/libGL.so
+			Adds a library path "/usr/lib/libGL.so".
 			"""),
 
 	USE_SYSTEM_LOAD_LIBRARIES(List.of("--use-system-load-library"), "",
@@ -86,25 +120,61 @@ public enum CLOption {
 	
 	OUTPUT_PATH(List.of("--output"), " <path>",
 			"""
-			Specifies where to place the generated files.
+			Specifies where to place the generated source files.
 
-			Example: --output /usr/dev/native
-			The classes will be generated in /usr/dev/native.
-			Example:
-			The classes will be generated in the current directory.
+			Example 1:
+			  jexctract CLI: --output /usr/dev/native
+			  jextractGUI: /usr/dev/native
+			The source files will be generated in "/usr/dev/native".
+
+			Example 2:
+			  jexctract CLI: <absent>
+			  jextractGUI: <empty string>
+			The source files will be generated in the current directory.
 			"""),
 
 	INCLUDE(List.of("--include-[function,constant,struct,union,typedef,var]"), "<String>",
 			"""
-			Includes a symbol of the given name and kind in the generated bindings. When one of these options is specified, any \
-			symbol that is not matched by any specified filters is omitted from the generated bindings.
+			Specifies the symbols to inlude in each header file for which bindings need to be generated.
+			To add a single header path, choose it with the select button (📂) or enter its path in the text field (⮠ ).
+			To add all header paths in a directory, recuresively, drag and drop (⭳) the directory into the list. Each header \
+			is parsed separately.
+			Headers will be passed to jextract and from there to Clang. Any error is passed back to the user.
 
-			Example: --include-struct Point2d
-			Only the "Point2D" struct will be included.
-			Example: --include-function distance
-			Only the "distance" function will be included.
+			If a header includes other headers, like '#include <header.h>', their paths will need to be provided. Clang searches \
+			some platform-specific directories automatically, like the includes folders of Visual Studio and Windows Kits on \
+			Windows. If the included headers are not found there, notification will be shown saying that the header couldn't be \
+			found, but the passed header will still be added to the headers list. Then add the directories containing the included \
+			headers to the Includes list and click on the "Reload header" (⟳) button of that header. The "Show error" (⚠) button \
+			will re-show the notification of the missing header.
+
+
+			Parsed headers will show all their symbols. Select the "Detailed view" checkbox to see details for symbols.
+			Include symbols (functions, structs, constants...) can be selected using the checkboxes. If all symbols are selected \
+			for a header, no --include-[...] options is used. This replaces the need to use dump symbols files and filtering.
+
+			Example 1:
+			  jexctract CLI: --include-struct Point2d
+			  jexctracGLI: <ticked Point2d checkbox> 
+			Only the "Point2D" struct will have bindings generated for it.
+
+			Example 2:
+			  jexctract CLI: --include-function distance
+			  jexctracGLI: <ticked distance checkbox>
+			Only the "distance" function will have bindings generated for it.
+
 			Example:
+			  jexctract CLI: <absent>
+			  jextractGUI: <ticked header checkbox (ticks all subitems)>
 			All symbols will be included.
+
+
+			Selecting a header or one of its sub-entries will show the options (macros, output path...) for that header. These \
+			are unique for each header entry, so each header should be configured separately.
+			Clicking on the "Print command" (🖊) button at any time will print the command that will be passed to jextract when \
+			the tool is run. This can be used inspect the command before running, or copying it to the command line. Clicking on \
+			the "Generate files" (▶) button will run jextract with the specified options. A notification will be shown with any \
+			warnings/errors and successes of the execution.
 			""");
 
 	List<String> commands;
