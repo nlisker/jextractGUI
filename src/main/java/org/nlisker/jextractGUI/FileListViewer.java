@@ -68,7 +68,7 @@ abstract class FileListViewer extends BorderPane implements TextInput<File>, Fil
 			new ListCell<>() {
 				{
 					textProperty().bind(itemProperty().map(File::toString));
-					fontProperty().bind(textProperty().map(text -> text.startsWith(":") ? defFont : italicFont).orElse(defFont));
+					fontProperty().bind(textProperty().map(text -> text.contains(File.separator) ? defFont : italicFont).orElse(defFont));
 				}
 			}
 		);
