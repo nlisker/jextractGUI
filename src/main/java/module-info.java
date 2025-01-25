@@ -25,6 +25,7 @@ module org.nlisker.jextractGUI {
 	requires org.kordamp.ikonli.materialdesign2;
 
 	requires org.openjdk.jextract;
+	requires java.compiler;
 
 	exports org.nlisker.jextractGUI to javafx.graphics;
 }

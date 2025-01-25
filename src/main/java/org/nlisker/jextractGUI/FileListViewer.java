@@ -64,7 +64,7 @@ abstract class FileListViewer extends BorderPane implements TextInput<File>, Fil
 
 		var defFont = Font.getDefault();
 		var italicFont = Font.font(defFont.getFamily(), FontPosture.ITALIC, defFont.getSize());
-		listView.setCellFactory(listView ->
+		listView.setCellFactory(_ ->
 			new ListCell<>() {
 				{
 					textProperty().bind(itemProperty().map(File::toString));
@@ -80,11 +80,11 @@ abstract class FileListViewer extends BorderPane implements TextInput<File>, Fil
 
 		var selectButton = ControlUtils.createSelectButton("Select path");
 		selectButton.disableProperty().bind(symbolsViewer.noFocus());
-		selectButton.setOnAction(e -> addValidFiles());
+		selectButton.setOnAction(_ -> addValidFiles());
 
 		var removeButton = ControlUtils.createRemoveButton();
 		removeButton.disableProperty().bind(listView.getSelectionModel().selectedItemProperty().isNull());
-		removeButton.setOnAction(e -> removeSelected());
+		removeButton.setOnAction(_ -> removeSelected());
 
 		Node freeTextControls = ControlUtils.createFreeTextControl(tooltipText, promptText, 100, this::addValidText);
 		freeTextControls.disableProperty().bind(symbolsViewer.noFocus());

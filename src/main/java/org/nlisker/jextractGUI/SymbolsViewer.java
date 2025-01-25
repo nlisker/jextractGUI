@@ -153,11 +153,11 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 		var runAllButton = ControlUtils.createButton(MaterialDesignA.ANIMATION_PLAY, Color.GREEN, "Generate files for all headers");
 		runAllButton.disableProperty().bind(noItems);
-		runAllButton.setOnAction(e -> runCommandForAllHeaders());
+		runAllButton.setOnAction(_ -> runCommandForAllHeaders());
 
 		var writeAllButton = ControlUtils.createButton(MaterialDesignP.PENCIL_BOX_MULTIPLE, Color.DARKBLUE, "Print command for all headers");
 		writeAllButton.disableProperty().bind(noItems);
-		writeAllButton.setOnAction(e -> writeCommandForAllHeaders());
+		writeAllButton.setOnAction(_ -> writeCommandForAllHeaders());
 
 		var progressIndicator = ControlUtils.createProgressIndicator(Bindings.isNotEmpty(runningTasks));
 
@@ -173,18 +173,18 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		Text title = ControlUtils.createTitle("Headers");
 
 		var selectButton = ControlUtils.createSelectButton("Select header path");
-		selectButton.setOnAction(e -> addValidFiles());
+		selectButton.setOnAction(_ -> addValidFiles());
 
 		var removeButton = ControlUtils.createRemoveButton();
 		var isSelectedHeader = selectedItem().map(item -> !(item.getValue() instanceof Header));
 		removeButton.disableProperty().bind(selectedItem().isNull().or(BooleanExpression.booleanExpression(isSelectedHeader)));
-		removeButton.setOnAction(e -> {
+		removeButton.setOnAction(_ -> {
 			var alert = new Alert(AlertType.CONFIRMATION);
 			alert.setContentText("Are you sure you want to remove the selected headers?");
-			alert.showAndWait().filter(ButtonType.OK::equals).ifPresent(b -> removeSelected());
+			alert.showAndWait().filter(ButtonType.OK::equals).ifPresent(_ -> removeSelected());
 		});
 
-		String prompt = STR."\{File.separator}path\{File.separator}header.h";
+		String prompt = File.separator + "path" + File.separator + "header.h";
 		Node freeTextControls = ControlUtils.createFreeTextControl("Enter header path", prompt, 100, this::addValidText);
 
 		HBox headerControls = ControlUtils.createControls(helpButton, title, selectButton, removeButton, freeTextControls);
@@ -196,12 +196,12 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		var simpleStringConverter = new DeclarationSimpleStringConverter();
 		var detailedStringConverter = new DeclarationDetailedStringConverter();
 		var scBinding = detailed.map(detailed -> detailed ? detailedStringConverter : simpleStringConverter);
-		Callback<TreeView<Displayable>, TreeCell<Displayable>> cellFactory = tree -> {
+		Callback<TreeView<Displayable>, TreeCell<Displayable>> cellFactory = _ -> {
 			var checkBoxTreeCell = new CheckBoxTreeCell<Displayable>();
 			checkBoxTreeCell.converterProperty().bind(scBinding);
 			return checkBoxTreeCell;
 		};
-		scBinding.addListener(observable -> tree.refresh());
+		scBinding.addListener(_ -> tree.refresh());
 
 		tree.setCellFactory(cellFactory);
 		tree.setShowRoot(false);
@@ -212,7 +212,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 	private Button createCollapseExpandButton(boolean expand) {
 		var icon = expand ? MaterialDesignE.EXPAND_ALL : MaterialDesignC.COLLAPSE_ALL;
 		var button = ControlUtils.createButton(icon, Color.DARKBLUE, (expand ? "Expand" : "Collapse") + " all");
-		button.setOnAction(e -> root().getChildren().forEach(typeItem -> {
+		button.setOnAction(_ -> root().getChildren().forEach(typeItem -> {
 			typeItem.setExpanded(expand);
 			typeItem.getChildren().forEach(symbolItem -> symbolItem.setExpanded(expand));
 		}));
@@ -275,13 +275,13 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 	private void addErrorButtonsForHeader(CheckBoxTreeItem<Displayable> headerItem, String message) {
 		var reloadButton = ControlUtils.createButton(MaterialDesignR.REFRESH_CIRCLE, Color.GREEN, "Reload header");
-		reloadButton.setOnAction(e -> {
+		reloadButton.setOnAction(_ -> {
 			items().remove(headerItem);
 			add(headerItem);
 		});
 
 		var errorButton = ControlUtils.createButton(MaterialDesignA.ALERT, Color.DARKBLUE, "Show error");
-		errorButton.setOnAction(e -> new Alert(AlertType.INFORMATION, message, ButtonType.OK).show());
+		errorButton.setOnAction(_ -> new Alert(AlertType.INFORMATION, message, ButtonType.OK).show());
 
 		var buttons = new HBox(5, errorButton, reloadButton);
 		buttons.setPadding(new Insets(0, 0, 0, 5));
@@ -293,11 +293,11 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 		var runButton = ControlUtils.createButton(MaterialDesignP.PLAY_BOX, Color.GREEN, "Generate files");
 		runButton.disableProperty().bind(notSelected);
-		runButton.setOnAction(e -> runCommandForHeader(headerItem));
+		runButton.setOnAction(_ -> runCommandForHeader(headerItem));
 
 		var writeButton = ControlUtils.createButton(MaterialDesignP.PENCIL_BOX, Color.DARKBLUE, "Print command");
 		writeButton.disableProperty().bind(notSelected);
-		writeButton.setOnAction(e -> writeCommandForHeader(headerItem));
+		writeButton.setOnAction(_ -> writeCommandForHeader(headerItem));
 
 		var buttons = new HBox(5, runButton, writeButton);
 		buttons.setPadding(new Insets(0, 0, 0, 5));
@@ -325,7 +325,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 				runningTasks.remove(task);
 			}
 		});
-		task.exceptionProperty().subscribe((__, ex) -> {
+		task.exceptionProperty().subscribe((_, ex) -> {
 			ex.printStackTrace();
 			String message = ex.getMessage();
 			if (message.contains("file not found")) {
@@ -413,7 +413,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 			System.setErr(oldErrorStream);
 		}
 		var output = ((Header) headerItem.getValue()).outputPath().get();
-		new Alert(AlertType.INFORMATION, STR."Successfully generated bindings at \{output}.", ButtonType.OK).show();
+		new Alert(AlertType.INFORMATION, "Successfully generated bindings at " + output + ".", ButtonType.OK).show();
 	}
 
 	/**

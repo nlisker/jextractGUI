@@ -31,7 +31,7 @@ import org.nlisker.jextractGUI.model.Displayable.Header;
 final class IncludesViewer extends FileListViewer {
 
 	IncludesViewer() {
-		String prompt = STR."\{File.separator}project\{File.separator}include";
+		String prompt = File.separator + "project" + File.separator + "include";
 		super("Includes", Header::includes, CLOption.INCLUDES_PATH, "Enter include path", prompt);
 	}
 

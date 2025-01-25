@@ -36,7 +36,7 @@ final class LibrariesViewer extends FileListViewer {
 	private static final List<String> EXTENTIONS = List.of(".dll", ".so", ".dylib");
 
 	LibrariesViewer() {
-		String prompt = STR.":\{File.separator}path\{File.separator}lib.dll OR knownLib";
+		String prompt = ":" + File.separator + "path" + File.separator + "lib.dll OR knownLib";
 		super("Libraries", Header::libraries, CLOption.LIBRARY_PATH, "Enter library name or path", prompt);
 
 		setTop(createUseSystemLoadControls());
@@ -61,7 +61,7 @@ final class LibrariesViewer extends FileListViewer {
 	@Override
 	public Optional<File> parseText(String text) {
 		return text.startsWith(":") ?
-			Optional.of(new File(text)).filter(file -> isValidFile(new File(text.substring(1)))) :
+			Optional.of(new File(text)).filter(_ -> isValidFile(new File(text.substring(1)))) :
 			Optional.of(new File(text)).filter(file -> file.toPath().getNameCount() == 1).map(file -> new File(file.getName()));
 	}
 

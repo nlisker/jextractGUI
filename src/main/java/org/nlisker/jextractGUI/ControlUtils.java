@@ -15,6 +15,7 @@
  */
 package org.nlisker.jextractGUI;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -90,7 +91,7 @@ class ControlUtils {
 
 	Button createHelpButton(CLOption option) {
 		var button = createButton(MaterialDesignH.HELP, HELP_ICON_FONT_SIZE, Color.DARKBLUE, "Help");
-		button.setOnAction(e -> {
+		button.setOnAction(_ -> {
 			var popup = new Alert(AlertType.INFORMATION);
 			popup.setTitle(option.toString());
 			popup.setHeaderText("Specifies " + option.commands().toString() + " " + option.argument());
@@ -119,8 +120,8 @@ class ControlUtils {
 	Node createFreeTextControl(String tooltipText, String prompt, int colCount, Consumer<TextField> onAction) {
 		var textField = createTextField(tooltipText, prompt, colCount);
 		var button = createButton(MaterialDesignK.KEYBOARD_RETURN, TEXT_COLOR, "Add");
-		textField.setOnAction(e -> onAction.accept(textField));
-		button.setOnAction(e -> onAction.accept(textField));
+		textField.setOnAction(_ -> onAction.accept(textField));
+		button.setOnAction(_ -> onAction.accept(textField));
 
 		HBox controls = createControls(textField, button);
 		controls.setBorder(Border.stroke(Color.DARKBLUE));
@@ -146,12 +147,8 @@ class ControlUtils {
 
 	<U> void bindFocusedHeader(Property<U> uiProperty, Function<Header, ? extends Property<U>> headerProperty) {
 		SymbolsViewer.get().focusedHeader().subscribe((oldHeader, newHeader) -> {
-			if (oldHeader != null) {
-				uiProperty.unbindBidirectional(headerProperty.apply(oldHeader));
-			}
-			if (newHeader != null) {
-				uiProperty.bindBidirectional(headerProperty.apply(newHeader));
-			}
+			Optional.of(oldHeader).map(headerProperty::apply).ifPresent(uiProperty::unbindBidirectional);
+			Optional.of(newHeader).map(headerProperty::apply).ifPresent(uiProperty::bindBidirectional);
 		});
 	}
 

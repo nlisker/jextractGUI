@@ -79,7 +79,7 @@ final class MacroViewer extends BorderPane implements TextInput<Macro> {
 
 		var removeButton = ControlUtils.createRemoveButton();
 		removeButton.disableProperty().bind(table.getSelectionModel().selectedItemProperty().isNull());
-		removeButton.setOnAction(e -> removeSelected());
+		removeButton.setOnAction(_ -> removeSelected());
 
 		Node freeTextControls = ControlUtils.createFreeTextControl("Enter macro", "A=42", 100, this::addValidText);
 		freeTextControls.disableProperty().bind(symbolsViewer.noFocus());

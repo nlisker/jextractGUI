@@ -136,7 +136,7 @@ public sealed interface Displayable {
 	}
 
 	/*
-	 * Representation of a {@code Declaration} used in the 3nd level of the tree. Shown differently for each type.
+	 * Representation of a {@code Declaration} used in the 3rd level of the tree. Shown differently for each type.
 	 */
 	@RequiredArgsConstructor
 	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -206,10 +206,10 @@ public sealed interface Displayable {
 
 		public static IncludeKind fromDeclaration(Declaration decl) {
 			return switch (decl) {
-				case Declaration.Function f -> FUNCTION;
-				case Declaration.Typedef t -> TYPEDEF;
-				case Declaration.Variable v -> VAR;
-				case Declaration.Constant c -> CONSTANT;
+				case Declaration.Function _ -> FUNCTION;
+				case Declaration.Typedef _ -> TYPEDEF;
+				case Declaration.Variable _ -> VAR;
+				case Declaration.Constant _ -> CONSTANT;
 				case Declaration.Scoped scoped -> fromScoped(scoped);
 				default -> throw new IllegalArgumentException("Unsupported Declaration: " + decl.toString());
 			};

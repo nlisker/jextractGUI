@@ -43,12 +43,12 @@ final class OutputPathViewer extends BorderPane {
 	private Pane createFolderTextControl() {
 		var symbolsViewer = SymbolsViewer.get();
 
-		String prompt = STR."\{File.separator}src\{File.separator}main\{File.separator}java";
+		String prompt = File.separator + "src" + File.separator + "main" + File.separator + "java";
 		var textField = ControlUtils.createBoundTextField("Enter output path", prompt, 30, Header::outputPath);
 
 		var selectButton = ControlUtils.createSelectButton("Select output path");
 		selectButton.disableProperty().bind(symbolsViewer.noFocus());
-		selectButton.setOnAction(e -> Optional.ofNullable(new DirectoryChooser().showDialog(JextractGUI.stage))
+		selectButton.setOnAction(_ -> Optional.ofNullable(new DirectoryChooser().showDialog(JextractGUI.stage))
 			.map(File::getPath)
 			.ifPresent(textField::setText));
 
