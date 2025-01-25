@@ -16,22 +16,23 @@
 
 plugins {
 	id "application"
-	id "org.openjfx.javafxplugin" version "+"
-	id "io.freefair.lombok" version "+"
-	id "com.google.osdetector" version "+"
-	id "org.beryx.jlink" version "+" // https://badass-jlink-plugin.beryx.org
+	id "org.openjfx.javafxplugin" version "0.1.0"
+	id "io.freefair.lombok" version "8.12"
+	id "com.google.osdetector" version "1.7.3"
+	id "org.beryx.jlink" version "3.1.1" // https://badass-jlink-plugin.beryx.org
+	id "com.github.ben-manes.versions" version "0.52.0"
 	id "eclipse"
 }
 
 version = "1.0.1" // macOS can't handle versions that start with 0
 
 ext {
-	javaVersion = "22";
-	javafxVersion = "22";
-	lombokVersion = "1.18.32";
+	javaVersion = "23";
+	javafxVersion = "23";
+	lombokVersion = "1.18.36";
 	ikonliVersion = "12.3.1";
-	junitVersion = "5.10.2";
-	gradleWrapperVersion = "8.7";
+	junitVersion = "5.11.4";
+	gradleWrapperVersion = "8.12.1";
 }
 
 dependencies {
@@ -77,6 +78,8 @@ tasks.withType(JavaCompile).configureEach {
 eclipse.classpath {
 	downloadJavadoc = true
 	downloadSources = true
+	// https://github.com/openjfx/javafx-gradle-plugin/issues/168
+	// https://github.com/gradle/gradle/issues/29296
 	file.whenMerged {
 		entries.find { it.getPath().contains("jextract.jar") }.each { it.entryAttributes["module"] = "true"	}
 	}
@@ -114,7 +117,7 @@ tasks.register("jpackageImageZip", Zip) {
 	description = "Creates a Zips of the jpackage image"
 
 	dependsOn tasks.jpackageImage
-    from tasks.jpackageImage.imageOutputDir
+	from tasks.jpackageImage.imageOutputDir
 
 	archiveClassifier = osdetector.os + "-" + osdetector.arch
 }
