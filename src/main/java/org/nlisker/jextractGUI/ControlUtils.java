@@ -147,8 +147,8 @@ class ControlUtils {
 
 	<U> void bindFocusedHeader(Property<U> uiProperty, Function<Header, ? extends Property<U>> headerProperty) {
 		SymbolsViewer.get().focusedHeader().subscribe((oldHeader, newHeader) -> {
-			Optional.of(oldHeader).map(headerProperty::apply).ifPresent(uiProperty::unbindBidirectional);
-			Optional.of(newHeader).map(headerProperty::apply).ifPresent(uiProperty::bindBidirectional);
+			Optional.ofNullable(oldHeader).map(headerProperty::apply).ifPresent(uiProperty::unbindBidirectional);
+			Optional.ofNullable(newHeader).map(headerProperty::apply).ifPresent(uiProperty::bindBidirectional);
 		});
 	}
 

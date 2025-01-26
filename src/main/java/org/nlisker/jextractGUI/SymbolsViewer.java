@@ -375,7 +375,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 	private Map<IncludeKind, List<Declaration>> mapSymbols(File headerFile, List<File> includes) {
 		var options = includes.stream().flatMap(include -> List.of("-I", include.toString()).stream()).toArray(String[]::new);
-		Scoped header = JextractTool.parse(List.of(headerFile.toPath()), options);
+		Scoped header = JextractTool.parse(List.of(headerFile.toString()), options);
 		return header.members().stream().collect(Collectors.groupingBy(IncludeKind::fromDeclaration));
 	}
 
