@@ -10,12 +10,6 @@ If offers several benefits over using the command line tool:
 
 ![screenshot](doc/screenshot.png)
 
-## Requirements
-
-jextractGUI does not ship with all the binaries needed for each operating system (like the [Clang](https://en.wikipedia.org/wiki/Clang) compiler) due to size considerations. You must have the [jextract 22 binaries](https://jdk.java.net/jextract) for your operating system available locally, and add the following to the `PATH` env variable:
-* Windows: `path\to\jextract\bin`.
-* MacOS/Linux: `path/to/jextract/lib`.
-
 ## Download
 
 Pre-built executables (using jpackage) for Windows, Linux, and MacOS are available under [Releases](https://github.com/nlisker/jextractGUI/releases).

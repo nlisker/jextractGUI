@@ -20,20 +20,133 @@ plugins {
 	id "io.freefair.lombok" version "8.12"
 	id "com.google.osdetector" version "1.7.3"
 	id "org.beryx.jlink" version "3.1.1" // https://badass-jlink-plugin.beryx.org
+	id "de.undercouch.download" version "5.6.0"
 	id "com.github.ben-manes.versions" version "0.52.0"
 	id "eclipse"
 }
 
-version = "1.0.1" // macOS can't handle versions that start with 0
+version = "1.0.0" // macOS can't handle versions that start with 0
 
 ext {
+	//jextract
+	jxtVerJDK = "22"
+	jxtVerM = "6";
+	jxtVerB = "47";
+
 	javaVersion = "23";
 	javafxVersion = "23";
 	lombokVersion = "1.18.36";
 	ikonliVersion = "12.3.1";
+
+	// test
 	junitVersion = "5.11.4";
+	truthVersion = "1.4.4";
+
 	gradleWrapperVersion = "8.12.1";
 }
+
+
+// jextract links
+//https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_linux-aarch64_bin.tar.gz
+//https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_linux-x64_bin.tar.gz
+//https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_macos-aarch64_bin.tar.gz
+//https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_macos-x64_bin.tar.gz
+//https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_windows-x64_bin.tar.gz
+
+var osName = osdetector.os == "osx" ? "macos" : osdetector.os;
+var osArch = osdetector.arch == "x86_64" ? "x64" : osdetector.arch;
+
+String jxtLink = "https://download.java.net/java/early_access/jextract/${jxtVerJDK}/${jxtVerM}/";
+String jxtName = "openjdk-${jxtVerJDK}-jextract+${jxtVerM}-${jxtVerB}_${osName}-${osArch}_bin.tar.gz";
+
+var jxtDir = "jextractBinaries";
+var javaBin = ProcessHandle.current().info().command().get().replace("java.exe", "");
+
+tasks.register("downloadJextractBinaries", Download) {
+	group = "build setup"
+	description = "Downloads the jextract binaries"
+
+    src jxtLink + jxtName
+    dest layout.buildDirectory.file("${jxtDir}/${jxtName}")
+    overwrite false
+
+//	doLast {
+//		println("Downloaded the jextract binaries")
+//	}
+}
+
+tasks.register("unzipJextractBinaries", Copy) {
+	group = "build setup"
+	description = "Unzips the required files from the binaries"
+
+	dependsOn tasks.downloadJextractBinaries
+
+	from tarTree(downloadJextractBinaries.dest).matching { include "**/modules", "**/libclang**" }
+	into layout.buildDirectory.file("${jxtDir}")
+	// Flatten
+	eachFile {
+		path = name
+	}
+	includeEmptyDirs = false
+
+//	doLast {
+//		println("Unzipped the jextract binaries")
+//	}
+}
+
+tasks.register("jimageJextract", Exec) {
+	group = "build setup"
+	description = "Extract the jextract module from the image"
+
+	dependsOn tasks.unzipJextractBinaries
+
+	workingDir unzipJextractBinaries.destinationDir
+	commandLine "${javaBin}jimage", "extract", "--include", "regex:.*jextract.*", "modules"
+
+//	doLast {
+//		println("Extracted the jextract module")
+//	}
+}
+
+/**
+ * `c` creates a jar
+ * `M` needed so 'jar' does not create its own manifest, overriding the existing one
+ * `f` defines the filename (and dir) of the jar
+ * `-C` cd's into the directory
+ * `.` add all files in the directory to the jar
+*/
+tasks.register("jarJextract", Exec) {
+	group = "build setup"
+	description = "Creates the thin jextract jar"
+
+	dependsOn tasks.jimageJextract
+
+	workingDir unzipJextractBinaries.destinationDir
+	commandLine "${javaBin}jar", "cfM", "jextract.jar", "-C", "org.openjdk.jextract/", "."
+
+//	doLast {
+//		println("Created the jextract jar")
+//	}
+}
+
+tasks.register("copyJextract", Copy) {
+	group = "build setup"
+	description = "Copies the required resources to the project"
+
+	dependsOn tasks.jarJextract, tasks.unzipJextractBinaries
+
+	from(unzipJextractBinaries.destinationDir) {
+		include "jextract.jar"
+		include "libclang**"
+    }
+    into "lib"
+
+//	doLast {
+//		println("Copied the jextract resources")
+//	}
+}
+
+compileJava.dependsOn copyJextract
 
 dependencies {
 	implementation files("lib/jextract.jar")
@@ -41,6 +154,7 @@ dependencies {
 	implementation "org.kordamp.ikonli:ikonli-materialdesign2-pack:$ikonliVersion"
 	implementation "org.kordamp.ikonli:ikonli-entypo-pack:$ikonliVersion"
 	testImplementation "org.junit.jupiter:junit-jupiter:$junitVersion"
+	testImplementation "com.google.truth:truth:$truthVersion"
 }
 
 java {
@@ -68,6 +182,11 @@ test {
 tasks.withType(JavaExec) {
 	jvmArgs += "--enable-preview"
 	jvmArgs += "--enable-native-access=org.openjdk.jextract"
+	doFirst {
+		// Add the extracted clang to the lib path
+		def libPath = "lib;" + System.getProperty("java.library.path")
+		systemProperty("java.library.path", libPath)
+	}
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -84,6 +203,27 @@ eclipse.classpath {
 		entries.find { it.getPath().contains("jextract.jar") }.each { it.entryAttributes["module"] = "true"	}
 	}
 }
+
+
+tasks.register("copyClang", Copy) {
+	group = "build"
+	description = "Copies the clang library into the image"
+
+	dependsOn tasks.jlink
+
+	from("lib") {
+		include "libclang**"
+    }
+    def subdir = osdetector.os == "windows" ? "bin" : "lib";
+    into tasks.jlink.imageDir.dir(subdir)
+
+//	doLast {
+//		println("Copied the jextract resources")
+//	}
+}
+
+tasks.named("jlink") { finalizedBy copyClang }
+tasks.named("jpackageImage") { dependsOn copyClang }
 
 var iconSuffix;
 switch (osdetector.os) {
@@ -117,6 +257,7 @@ tasks.register("jpackageImageZip", Zip) {
 	description = "Creates a Zips of the jpackage image"
 
 	dependsOn tasks.jpackageImage
+
 	from tasks.jpackageImage.imageOutputDir
 
 	archiveClassifier = osdetector.os + "-" + osdetector.arch
