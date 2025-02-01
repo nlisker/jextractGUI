@@ -225,13 +225,13 @@ tasks.register("copyClang", Copy) {
 tasks.named("jlink") { finalizedBy copyClang }
 tasks.named("jpackageImage") { dependsOn copyClang }
 
-var iconSuffix;
+var iconPath;
 switch (osdetector.os) {
-	case "windows": iconSuffix = "ico"
+	case "windows": iconPath = "buildResources/icons/icon.ico"
 		break
-	case "linux": iconSuffix = "png"
+	case "linux": iconPath = "src/main/resources/icons/icon.png" // linux reuses the runtime icon
 		break
-	case "osx": iconSuffix = "icns"
+	case "osx": iconPath = "buildResources/icons/icon.icns"
 		break
 }
 jlink {
@@ -245,7 +245,7 @@ jlink {
 				   "--enable-native-access", "org.openjdk.jextract"]
 	}
 	jpackage {
-		icon = "src/main/resources/icon." + iconSuffix
+		icon = iconPath
 		imageOptions = ["--app-content", "LICENSE.txt"]
 		imageOptions += ["--app-content", "NOTICE.txt"]
 		imageOptions += ["--verbose"]

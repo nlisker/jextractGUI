@@ -33,7 +33,7 @@ public class JextractGUI extends Application {
 		stage.setScene(scene);
 		stage.setTitle("jextractGUI");
 		stage.setWidth(1200);
-		try (var stream = JextractGUI.class.getResourceAsStream("/icon.png")) {
+		try (var stream = JextractGUI.class.getResourceAsStream("/icons/icon.png")) {
 			stage.getIcons().add(new Image(stream));
 		}
 		stage.show();
