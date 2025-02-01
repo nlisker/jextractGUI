@@ -222,7 +222,6 @@ public sealed interface Displayable {
 				case ENUM -> CONSTANT;
 				case BITFIELDS -> throw new IllegalArgumentException("BITFIELDS not supported");
 				case TOPLEVEL -> throw new IllegalArgumentException("TOPLEVEL can't be nested");
-				default -> throw new IllegalArgumentException("Unsupported Declaration.Scoped: " + scoped.toString());
 			};
 		}
 	}
