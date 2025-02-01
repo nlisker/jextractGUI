@@ -240,7 +240,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 	@Override
 	public Optional<CheckBoxTreeItem<Displayable>> parseText(String text) {
-		return Optional.of(text).map(File::new).filter(this::isValidFile).map(this::createHeaderItem);
+		return Optional.of(text).map(File::new).filter(SymbolsViewer::isValidFile).map(this::createHeaderItem);
 	}
 
 	@Override
@@ -259,10 +259,10 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 	@Override
 	public Optional<CheckBoxTreeItem<Displayable>> parseDnDPath(Path path) {
-		return Optional.of(path.toFile()).filter(this::isValidFile).map(this::createHeaderItem);
+		return Optional.of(path.toFile()).filter(SymbolsViewer::isValidFile).map(this::createHeaderItem);
 	}
 
-	private boolean isValidFile(File file) {
+	private static boolean isValidFile(File file) {
 		return file.isFile() && EXTENTIONS.stream().anyMatch(file.toString()::endsWith);
 	}
 
@@ -356,7 +356,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		});
 	}
 
-	private void populateHeaderSymbols(CheckBoxTreeItem<Displayable> headerItem) {
+	private static void populateHeaderSymbols(CheckBoxTreeItem<Displayable> headerItem) {
 		var header = (Header) headerItem.getValue();
 		Map<IncludeKind, List<Declaration>> symbols = mapSymbols(header.file(), header.includes());
 
@@ -373,11 +373,12 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		});
 	}
 
-	private Map<IncludeKind, List<Declaration>> mapSymbols(File headerFile, List<File> includes) {
+	private static Map<IncludeKind, List<Declaration>> mapSymbols(File headerFile, List<File> includes) {
 		var options = includes.stream().flatMap(include -> List.of("-I", include.toString()).stream()).toArray(String[]::new);
 		Scoped header = JextractTool.parse(List.of(headerFile.toString()), options);
 		return header.members().stream().collect(Collectors.groupingBy(IncludeKind::fromDeclaration));
 	}
+
 
 	/**
 	 * Runs the commands for all selected or indeterminate headers.
@@ -423,26 +424,26 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		root().getChildren().stream()
 			.map(CheckBoxTreeItem.class::cast)
 			.filter(item -> item.isSelected() || item.isIndeterminate())
-			.map(this::createCommandForHeader)
+			.map(SymbolsViewer::createCommandForHeader)
 			.reduce((c1, c2) -> c1 + "\n\n" + c2)
-			.ifPresent(this::writeCommand);
+			.ifPresent(SymbolsViewer::writeCommand);
 	}
 
 	/**
 	 * Writes the command for the requested header to the console.
 	 */
-	private void writeCommandForHeader(CheckBoxTreeItem<Displayable> headerItem) {
+	private static void writeCommandForHeader(CheckBoxTreeItem<Displayable> headerItem) {
 		writeCommand(createCommandForHeader(headerItem));
 	}
 
-	private void writeCommand(String command) {
+	private static void writeCommand(String command) {
 		MainView.get().console.setText(command);
 	}
 
 	/**
 	 * Creates a text command for the requested header, wrapping spaced arguments in quotes.
 	 */
-	private String createCommandForHeader(CheckBoxTreeItem<Displayable> headerItem) {
+	private static String createCommandForHeader(CheckBoxTreeItem<Displayable> headerItem) {
 		List<String> args = createArgsForHeader(headerItem);
 		return args.stream().map(s -> s.contains(" ") ? "\"" + s + "\"" : s).collect(Collectors.joining(" "));
 	}
@@ -450,7 +451,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 	/**
 	 * Creates a list of arguments for the requested header to be passed into jextract.
 	 */
-	private List<String> createArgsForHeader(CheckBoxTreeItem<Displayable> headerItem) {
+	private static List<String> createArgsForHeader(CheckBoxTreeItem<Displayable> headerItem) {
 		var header = (Header) headerItem.getValue();
 		List<String> args = header.createCommand();
 		createSymbolsForHeader(headerItem).ifPresent(args::add);
@@ -460,7 +461,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 	/**
 	 * Returns the include symbols for a given header. If the header is selected, the Optional will be empty.
 	 */
-	private Optional<String> createSymbolsForHeader(CheckBoxTreeItem<Displayable> headerItem) {
+	private static Optional<String> createSymbolsForHeader(CheckBoxTreeItem<Displayable> headerItem) {
 		if (!headerItem.isIndeterminate()) {
 			return Optional.empty();
 		}
