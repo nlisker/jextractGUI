@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 
+/// A command-line option for the run command. Each option can be converted to a [#command] representation.
 @Getter
 @Accessors(fluent = true)
 @RequiredArgsConstructor
@@ -179,12 +180,15 @@ public enum CLOption {
 
 	List<String> commands;
 
+	/// The textual format of the argument for the command option. For example, `MACRO` is given as `<macro>=<value>`.
 	String argument;
 
+	/// The description of the command option for the user. Closely related to jextract's `--help`.
 	String description;
-	
+
+	/// The textual representation of the command option. For example, `OUTPUT_PATH` converts to `--output`.
 	public String command() {
-		return commands.get(0);
+		return commands.getFirst();
 	}
 
 	@Override

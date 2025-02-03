@@ -15,35 +15,59 @@
  */
 package org.nlisker.jextractGUI.model;
 
+import static java.util.stream.Collectors.*;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ObservableBooleanValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 
+import org.nlisker.jextractGUI.model.Displayable.IncludeKindGroup.IncludeKind;
 import org.openjdk.jextract.Declaration;
 import org.openjdk.jextract.Declaration.ClangAttributes;
+import org.openjdk.jextract.Declaration.Scoped;
 
+/// An item to be displayed in the symbols tree. It can be a header, a type under a header, or a declaration under a type.
+/// Each item can be converted to a part of the run command using [#asOption]. For example:
+/// ```
+/// my/headers/header.h -> "my/headers/header.h"
+///   ☑ var            -> "--include-var"
+///     ☑ i            -> "i"
+///     ☐ u
+/// ```
+/// converts to  
+/// `my/headers/header.h "--include-var i"`.
 public sealed interface Displayable {
 
+	/// {@return the simple textual representation of the `Displayable`}
 	String simple();
 
+	/// {@return the detailed textual representation of the `Displayable`}
 	String detailed();
 
+	/// {@return the command segment representing the `Displayable`}
+	/// @see Displayable
 	String asOption();
 
+	/// Representation of a header used in the 1st level of the tree. Shown as its file path.
 	@Getter
 	@Accessors(fluent = true)
 	@RequiredArgsConstructor
@@ -60,6 +84,19 @@ public sealed interface Displayable {
 		ObservableList<Macro> macros = FXCollections.observableArrayList();
 		BooleanProperty useSystemLoadLibraries = new SimpleBooleanProperty();
 
+		List<IncludeKindGroup> includeKindGroups = new ArrayList<>();
+
+		@Setter
+		@NonFinal
+		ObservableBooleanValue requiresIncludeArgs;
+
+		public void populate(Scoped header) {
+			Map<IncludeKind,List<IncludeKindDeclaration>> map = header.members().stream()
+					.collect(groupingBy(IncludeKind::fromDeclaration,
+							 mapping(IncludeKindDeclaration::new, Collectors.toList())));
+			map.forEach((kind, decls) -> includeKindGroups.add(new IncludeKindGroup(kind, decls)));
+		}
+
 		@Override
 		public String simple() {
 			return file.getName().toString();
@@ -75,8 +112,16 @@ public sealed interface Displayable {
 			return detailed();
 		}
 
-		public List<String> createCommand() {
+		/// Creates the jextract command a text, ready to be passed to it. Spaced segments are wrapped in quotes.
+		public String createCommandText() {
+			return createCommandSegments().stream().map(s -> s.contains(" ") ? "\"" + s + "\"" : s).collect(Collectors.joining(" "));
+		}
+
+		/// Creates the jextract command as segments, including all the header-specific options like class and package names,
+		/// includes, macros etc.
+		public List<String> createCommandSegments() {
 			var args = new ArrayList<String>();
+
 			args.add(asOption());
 			if (!packageName.get().isBlank()) {
 				args.add(CLOption.PACKAGE_NAME.command());
@@ -105,19 +150,44 @@ public sealed interface Displayable {
 				args.add(CLOption.OUTPUT_PATH.command());
 				args.add(outputPath.get());
 			}
+
+			if (requiresIncludeArgs() != null && requiresIncludeArgs().get()) {
+				addIncludesArgs(args);
+			}
+
 			return args;
+		}
+
+		/// Adds the [#IncludeKind] arguments.
+		private void addIncludesArgs(List<String> args) {
+			for (var kindGroup : includeKindGroups()) {
+				if (kindGroup.included().get()) {
+					for (var kindDecl : kindGroup.includeDeclarations()) {
+						if (kindDecl.included().get()) {
+							args.add(kindGroup.asOption());
+							args.add(kindDecl.asOption());
+						}
+					}
+				}
+			}
 		}
 	}
 
-	/*
-	 * Representation of an {@code IncludeKind} used in the 2nd level of the tree. Shown as its name and size.
-	 */
+	/// Representation of an {@link IncludeKind} used in the 2nd level of the tree. Shown as its name and number of leaves.
+	@Accessors(fluent = true)
 	@RequiredArgsConstructor
 	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-	final class IncludeKindDisplay implements Displayable {
+	final class IncludeKindGroup implements Displayable {
 
 		IncludeKind includeKind;
-		int size;
+
+		@Getter
+		List<IncludeKindDeclaration> includeDeclarations;
+
+		@Getter
+		@Setter
+		@NonFinal
+		ObservableBooleanValue included;
 
 		@Override
 		public String simple() {
@@ -126,23 +196,65 @@ public sealed interface Displayable {
 
 		@Override
 		public String detailed() {
-			return simple() + " (" + size + ")";
+			return simple() + " (" + includeDeclarations.size() + ")";
 		}
 
 		@Override
 		public String asOption() {
 			return includeKind.optionName();
 		}
+		
+		/// Valid types to use for the `--include-[function,constant,struct,union,typedef,var]` option.
+		enum IncludeKind {
+
+			FUNCTION,
+			/// Macro or enum constant
+			CONSTANT,
+			TYPEDEF,
+			STRUCT,
+			UNION,
+			VAR;
+
+			private String optionName() {
+				return "--include-" + name().toLowerCase();
+			}
+
+			public static IncludeKind fromDeclaration(Declaration decl) {
+				return switch (decl) {
+					case Declaration.Function _ -> FUNCTION;
+					case Declaration.Typedef _ -> TYPEDEF;
+					case Declaration.Variable _ -> VAR;
+					case Declaration.Constant _ -> CONSTANT;
+//					case Declaration.Bitfield _ -> ?; // supported?
+					case Declaration.Scoped scoped -> fromScoped(scoped);
+					default -> throw new IllegalArgumentException("Unsupported Declaration: " + decl.toString());
+				};
+			}
+
+			private static IncludeKind fromScoped(Declaration.Scoped scoped) {
+				return switch (scoped.kind()) {
+					case STRUCT -> STRUCT;
+					case UNION -> UNION;
+					case ENUM -> CONSTANT;
+					case BITFIELDS -> throw new IllegalArgumentException("BITFIELDS not supported");
+					case TOPLEVEL -> throw new IllegalArgumentException("TOPLEVEL can't be nested");
+				};
+			}
+		}
 	}
 
-	/*
-	 * Representation of a {@code Declaration} used in the 3rd level of the tree. Shown differently for each type.
-	 */
+	/// Representation of a {@link Declaration} used in the 3rd level of the tree. Shown as its name with additional info.
 	@RequiredArgsConstructor
 	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-	final class DeclarationDisplay implements Displayable {
+	final class IncludeKindDeclaration implements Displayable {
 
 		Declaration declaration;
+
+		@Getter
+		@Setter
+		@Accessors(fluent = true)
+		@NonFinal
+		ObservableBooleanValue included;
 
 		@Override
 		public String simple() {
@@ -155,15 +267,23 @@ public sealed interface Displayable {
 		}
 
 		private String detailedWithoutLocation() {
-			String string = declaration.attributes().stream()
+			String string = createAttributesString();
+			string += string.isEmpty() ? "" : " ";
+			string += createDelarationString();
+			return string;
+		}
+
+		private String createAttributesString() {
+			return declaration.attributes().stream()
 					.filter(ClangAttributes.class::isInstance)
 					.map(ClangAttributes.class::cast)
 					.flatMap(attr -> attr.attributes().entrySet().stream())
-					.map(clangAttr -> clangAttr.getKey())
+					.map(Entry::getKey)
 					.collect(Collectors.joining(" "));
-			string += string.isEmpty() ? "" : " ";
+		}
 
-			string += switch (declaration) {
+		private String createDelarationString() {
+			return switch (declaration) {
 				case Declaration.Function f -> f.type().returnType() + " " + f.name() + f.parameters().stream()
 						.map(v -> v.type() + " " + v.name())
 						.collect(Collectors.joining(", ", "(", ")"));
@@ -171,58 +291,16 @@ public sealed interface Displayable {
 				case Declaration.Variable v -> v.type() + " " + v.name();
 				case Declaration.Typedef t -> t.name() + " " + t.type();
 				case Declaration.Scoped s -> s.kind() + " " + s.name() + s.members().stream()
-						.map(DeclarationDisplay::new)
-						.map(DeclarationDisplay::detailedWithoutLocation)
+						.map(IncludeKindDeclaration::new)
+						.map(IncludeKindDeclaration::detailedWithoutLocation)
 						.collect(Collectors.joining(", ", " { ", " }"));
 				default -> throw new IllegalStateException("Cannot get here!");
 			};
-			return string;
 		}
 
 		@Override
 		public String asOption() {
 			return simple();
-		}
-	}
-
-	/**
-	 * Valid types to use for the {@code --include-[function,constant,struct,union,typedef,var]} option.
-	 */
-	public enum IncludeKind {
-
-		FUNCTION,
-		/*
-		 * Macro or enum constant
-		 */
-		CONSTANT,
-		TYPEDEF,
-		STRUCT,
-		UNION,
-		VAR;
-
-		private String optionName() {
-			return "--include-" + name().toLowerCase();
-		}
-
-		public static IncludeKind fromDeclaration(Declaration decl) {
-			return switch (decl) {
-				case Declaration.Function _ -> FUNCTION;
-				case Declaration.Typedef _ -> TYPEDEF;
-				case Declaration.Variable _ -> VAR;
-				case Declaration.Constant _ -> CONSTANT;
-				case Declaration.Scoped scoped -> fromScoped(scoped);
-				default -> throw new IllegalArgumentException("Unsupported Declaration: " + decl.toString());
-			};
-		}
-
-		private static IncludeKind fromScoped(Declaration.Scoped scoped) {
-			return switch (scoped.kind()) {
-				case STRUCT -> STRUCT;
-				case UNION -> UNION;
-				case ENUM -> CONSTANT;
-				case BITFIELDS -> throw new IllegalArgumentException("BITFIELDS not supported");
-				case TOPLEVEL -> throw new IllegalArgumentException("TOPLEVEL can't be nested");
-			};
 		}
 	}
 }
