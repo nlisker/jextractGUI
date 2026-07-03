@@ -1,7 +1,19 @@
-/bin
-/build
-/gen
-/.gradle
-/.settings
+# Gradle project-specific cache directory
+.gradle
+
+# Gradle build output directory
+build/
+
+# Eclipse build output directory
+bin/
+
+# Eclipse config
 .classpath
 .project
+.settings/
+
+# jextract downloaded resources
+lib/
+
+# generated headers
+gen/
