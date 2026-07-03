@@ -17,32 +17,32 @@
 plugins {
 	id "application"
 	id "org.openjfx.javafxplugin" version "0.1.0"
-	id "io.freefair.lombok" version "8.12"
+	id "io.freefair.lombok" version "9.5.0"
 	id "com.google.osdetector" version "1.7.3"
-	id "org.beryx.jlink" version "3.1.1" // https://badass-jlink-plugin.beryx.org
+	id "org.beryx.jlink" version "4.0.2" // https://badass-jlink-plugin.beryx.org
 	id "de.undercouch.download" version "5.6.0"
-	id "com.github.ben-manes.versions" version "0.52.0"
+	id "com.github.ben-manes.versions" version "0.54.0"
 	id "eclipse"
 }
 
-version = "1.0.0" // macOS can't handle versions that start with 0
+version = "0.1.0"
 
 ext {
 	//jextract
-	jxtVerJDK = "22"
-	jxtVerM = "6";
-	jxtVerB = "47";
+	jxtVerJDK = "25"
+	jxtVerM = "2";
+	jxtVerB = "4";
 
-	javaVersion = "23";
-	javafxVersion = "23";
-	lombokVersion = "1.18.36";
-	ikonliVersion = "12.3.1";
+	javaVersion = "26";
+	javafxVersion = "26";
+	lombokVersion = "1.18.46";
+	ikonliVersion = "12.4.0";
 
 	// test
-	junitVersion = "5.11.4";
-	truthVersion = "1.4.4";
+	junitVersion = "6.1.1";
+	truthVersion = "1.4.5";
 
-	gradleWrapperVersion = "8.12.1";
+	gradleWrapperVersion = "9.6.1";
 }
 
 
@@ -236,19 +236,19 @@ switch (osdetector.os) {
 }
 jlink {
 	options = ["--strip-debug",
-			   "--compress", "zip-6",
-			   "--no-header-files",
-			   "--no-man-pages"]
+			"--compress", "zip-6",
+			"--no-header-files",
+			"--no-man-pages"]
 	launcher {
 		name = "jextractGUI"
 		jvmArgs = ["--enable-preview",
-				   "--enable-native-access", "org.openjdk.jextract"]
+				"--enable-native-access", "org.openjdk.jextract"]
 	}
 	jpackage {
 		icon = iconPath
-		imageOptions = ["--app-content", "LICENSE.txt"]
-		imageOptions += ["--app-content", "NOTICE.txt"]
-		imageOptions += ["--verbose"]
+		imageOptions = ["--app-content", "LICENSE.txt",
+				"--app-content", "NOTICE.txt",
+				"--verbose"]
 	}
 }
 
