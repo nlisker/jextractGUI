@@ -33,6 +33,7 @@ ext {
 	jxtVerM = "2";
 	jxtVerB = "4";
 
+	// main
 	javaVersion = "26";
 	javafxVersion = "26";
 	lombokVersion = "1.18.46";
@@ -45,8 +46,64 @@ ext {
 	gradleWrapperVersion = "9.6.1";
 }
 
+dependencies {
+	implementation files("lib/jextract.jar")
+	implementation "org.kordamp.ikonli:ikonli-javafx:$ikonliVersion"
+	implementation "org.kordamp.ikonli:ikonli-materialdesign2-pack:$ikonliVersion"
+	implementation "org.kordamp.ikonli:ikonli-entypo-pack:$ikonliVersion"
+	testImplementation "org.junit.jupiter:junit-jupiter:$junitVersion"
+	testImplementation "com.google.truth:truth:$truthVersion"
+}
 
-// jextract links
+java {
+	toolchain.languageVersion.set(JavaLanguageVersion.of(javaVersion))
+}
+
+lombok {
+	version = lombokVersion
+}
+
+javafx {
+    version = javafxVersion
+    modules = [ "javafx.controls" ]
+}
+
+application {
+	mainModule = "org.nlisker.jextractGUI" // name defined in module-info.java - required by application plugin with modules
+	mainClass = "org.nlisker.jextractGUI.JextractGUI" // required by application plugin always
+}
+
+test {
+	useJUnitPlatform()
+}
+
+tasks.withType(JavaExec) {
+	jvmArgs += "--enable-preview"
+	jvmArgs += "--enable-native-access=org.openjdk.jextract"
+	doFirst {
+		// Add the extracted clang to the lib path
+		def libPath = "lib;" + System.getProperty("java.library.path")
+		systemProperty("java.library.path", libPath)
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs.add("--enable-preview")
+	options.setEncoding("UTF-8")
+}
+
+eclipse.classpath {
+	downloadJavadoc = true
+	downloadSources = true
+	// https://github.com/openjfx/javafx-gradle-plugin/issues/168
+	// https://github.com/gradle/gradle/issues/29296
+	file.whenMerged {
+		entries.find { it.getPath().contains("jextract.jar") }.each { it.entryAttributes["module"] = "true"	}
+	}
+}
+
+
+// jextract link examples
 //https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_linux-aarch64_bin.tar.gz
 //https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_linux-x64_bin.tar.gz
 //https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_macos-aarch64_bin.tar.gz
@@ -147,63 +204,6 @@ tasks.register("copyJextract", Copy) {
 }
 
 compileJava.dependsOn copyJextract
-
-dependencies {
-	implementation files("lib/jextract.jar")
-	implementation "org.kordamp.ikonli:ikonli-javafx:$ikonliVersion"
-	implementation "org.kordamp.ikonli:ikonli-materialdesign2-pack:$ikonliVersion"
-	implementation "org.kordamp.ikonli:ikonli-entypo-pack:$ikonliVersion"
-	testImplementation "org.junit.jupiter:junit-jupiter:$junitVersion"
-	testImplementation "com.google.truth:truth:$truthVersion"
-}
-
-java {
-	toolchain.languageVersion.set(JavaLanguageVersion.of(javaVersion))
-}
-
-lombok {
-	version = lombokVersion
-}
-
-javafx {
-    version = javafxVersion
-    modules = [ "javafx.controls" ]
-}
-
-application {
-	mainModule = "org.nlisker.jextractGUI" // name defined in module-info.java - required by application plugin with modules
-	mainClass = "org.nlisker.jextractGUI.JextractGUI" // required by application plugin always
-}
-
-test {
-	useJUnitPlatform()
-}
-
-tasks.withType(JavaExec) {
-	jvmArgs += "--enable-preview"
-	jvmArgs += "--enable-native-access=org.openjdk.jextract"
-	doFirst {
-		// Add the extracted clang to the lib path
-		def libPath = "lib;" + System.getProperty("java.library.path")
-		systemProperty("java.library.path", libPath)
-	}
-}
-
-tasks.withType(JavaCompile).configureEach {
-	options.compilerArgs.add("--enable-preview")
-	options.setEncoding("UTF-8")
-}
-
-eclipse.classpath {
-	downloadJavadoc = true
-	downloadSources = true
-	// https://github.com/openjfx/javafx-gradle-plugin/issues/168
-	// https://github.com/gradle/gradle/issues/29296
-	file.whenMerged {
-		entries.find { it.getPath().contains("jextract.jar") }.each { it.entryAttributes["module"] = "true"	}
-	}
-}
-
 
 tasks.register("copyClang", Copy) {
 	group = "build"
