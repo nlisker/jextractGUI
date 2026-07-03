@@ -1,12 +1,12 @@
 /*
  * Copyright 2024 Nir Lisker
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,7 +53,7 @@ import org.openjdk.jextract.Declaration.Scoped;
 ///     ☑ i            -> "i"
 ///     ☐ u
 /// ```
-/// converts to  
+/// converts to
 /// `my/headers/header.h "--include-var i"`.
 public sealed interface Displayable {
 
@@ -64,7 +64,6 @@ public sealed interface Displayable {
 	String detailed();
 
 	/// {@return the command segment representing the `Displayable`}
-	/// @see Displayable
 	String asOption();
 
 	/// Representation of a header used in the 1st level of the tree. Shown as its file path.
@@ -203,7 +202,7 @@ public sealed interface Displayable {
 		public String asOption() {
 			return includeKind.optionName();
 		}
-		
+
 		/// Valid types to use for the `--include-[function,constant,struct,union,typedef,var]` option.
 		enum IncludeKind {
 

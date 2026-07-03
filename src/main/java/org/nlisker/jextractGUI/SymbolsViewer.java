@@ -1,12 +1,12 @@
 /*
  * Copyright 2024 Nir Lisker
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -78,9 +78,7 @@ import org.openjdk.jextract.Declaration.Scoped;
 import org.openjdk.jextract.JextractTool;
 import org.openjdk.jextract.JextractTool.JextractToolProvider;
 
-/**
- * Viewer and controls for the header files and their content (<i>symbols</i>).
- */
+/// Viewer and controls for the header files and their content (*symbols*).
 @Accessors(fluent = true)
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displayable>>,
@@ -103,7 +101,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 	@Getter(value = AccessLevel.PACKAGE)
 	ObjectProperty<Header> focusedHeader = new SimpleObjectProperty<>();
-	
+
 	@Getter(value = AccessLevel.PACKAGE)
 	BooleanBinding noFocus = focusedHeader.isNull();
 
@@ -314,7 +312,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		};
 		task.runningProperty().subscribe(running -> {
 			if (running) {
-				runningTasks.add(task);	
+				runningTasks.add(task);
 			} else {
 				runningTasks.remove(task);
 			}

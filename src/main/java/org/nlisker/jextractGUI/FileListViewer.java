@@ -1,12 +1,12 @@
 /*
  * Copyright 2024 Nir Lisker
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,9 +38,7 @@ import lombok.experimental.FieldDefaults;
 import org.nlisker.jextractGUI.model.CLOption;
 import org.nlisker.jextractGUI.model.Displayable.Header;
 
-/**
- * Parent class of viewers and controls for file lists. 
- */
+/// Parent class of viewers and controls for file lists.
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 abstract class FileListViewer extends BorderPane implements TextInput<File>, FilesInput<File>, DnDInput<File> {
 

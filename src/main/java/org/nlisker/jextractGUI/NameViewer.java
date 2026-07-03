@@ -1,12 +1,12 @@
 /*
  * Copyright 2024 Nir Lisker
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,9 +29,7 @@ import javafx.scene.layout.HBox;
 import org.nlisker.jextractGUI.model.CLOption;
 import org.nlisker.jextractGUI.model.Displayable.Header;
 
-/**
- * Viewer and controls for the package and class names generation.
- */
+/// Viewer and controls for the package and class names generation.
 sealed abstract class NameViewer extends BorderPane {
 
 	protected NameViewer(CLOption option, String name, String tooltipText, String prompt, int colCount,
