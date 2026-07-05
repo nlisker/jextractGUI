@@ -20,9 +20,7 @@ import static java.util.stream.Collectors.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -90,10 +88,10 @@ public sealed interface Displayable {
 		ObservableBooleanValue requiresIncludeArgs;
 
 		public void populate(Scoped header) {
-			Map<IncludeKind,List<IncludeKindDeclaration>> map = header.members().stream()
-					.collect(groupingBy(IncludeKind::fromDeclaration,
-							 mapping(IncludeKindDeclaration::new, Collectors.toList())));
-			map.forEach((kind, decls) -> includeKindGroups.add(new IncludeKindGroup(kind, decls)));
+			header.members().stream()
+					.collect(groupingBy(IncludeKind::fromDeclaration, mapping(IncludeKindDeclaration::new, toList())))
+					.forEach((includeKind, includeKindDeclarations) ->
+							includeKindGroups.add(new IncludeKindGroup(includeKind, includeKindDeclarations)));
 		}
 
 		@Override
@@ -113,7 +111,7 @@ public sealed interface Displayable {
 
 		/// Creates the jextract command a text, ready to be passed to it. Spaced segments are wrapped in quotes.
 		public String createCommandText() {
-			return createCommandSegments().stream().map(s -> s.contains(" ") ? "\"" + s + "\"" : s).collect(Collectors.joining(" "));
+			return createCommandSegments().stream().map(s -> s.contains(" ") ? "\"" + s + "\"" : s).collect(joining(" "));
 		}
 
 		/// Creates the jextract command as segments, including all the header-specific options like class and package names,
@@ -172,7 +170,7 @@ public sealed interface Displayable {
 		}
 	}
 
-	/// Representation of an {@link IncludeKind} used in the 2nd level of the tree. Shown as its name and number of leaves.
+	/// Representation of an [IncludeKind] used in the 2nd level of the tree. Shown as its name and number of leaves.
 	@Accessors(fluent = true)
 	@RequiredArgsConstructor
 	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -242,7 +240,7 @@ public sealed interface Displayable {
 		}
 	}
 
-	/// Representation of a {@link Declaration} used in the 3rd level of the tree. Shown as its name with additional info.
+	/// Representation of a [Declaration] used in the 3rd level of the tree. Shown as its name with additional info.
 	@RequiredArgsConstructor
 	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	final class IncludeKindDeclaration implements Displayable {
@@ -278,21 +276,21 @@ public sealed interface Displayable {
 					.map(ClangAttributes.class::cast)
 					.flatMap(attr -> attr.attributes().entrySet().stream())
 					.map(Entry::getKey)
-					.collect(Collectors.joining(" "));
+					.collect(joining(" "));
 		}
 
 		private String createDelarationString() {
 			return switch (declaration) {
 				case Declaration.Function f -> f.type().returnType() + " " + f.name() + f.parameters().stream()
 						.map(v -> v.type() + " " + v.name())
-						.collect(Collectors.joining(", ", "(", ")"));
+						.collect(joining(", ", "(", ")"));
 				case Declaration.Constant c -> c.type() + " " + c.name() + " = " + c.value();
 				case Declaration.Variable v -> v.type() + " " + v.name();
 				case Declaration.Typedef t -> t.name() + " " + t.type();
 				case Declaration.Scoped s -> s.kind() + " " + s.name() + s.members().stream()
 						.map(IncludeKindDeclaration::new)
 						.map(IncludeKindDeclaration::detailedWithoutLocation)
-						.collect(Collectors.joining(", ", " { ", " }"));
+						.collect(joining(", ", " { ", " }"));
 				default -> throw new IllegalStateException("Cannot get here!");
 			};
 		}
