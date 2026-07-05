@@ -1,12 +1,12 @@
 /*
  * Copyright 2024 Nir Lisker
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,7 +35,7 @@ public enum CLOption {
 			Defines a C preprocessor macro, given as a name-value pair.
 
 			Example:
-			  jexctract CLI: -D A=42
+			  jextract CLI: -D A=42
 			  jextractGUI: A=42
 			Adds a preprocessor macro defining 'A' as 42.
 			"""),
@@ -46,12 +46,12 @@ public enum CLOption {
 			the header file name.
 
 			Example 1:
-			  jexctract CLI: --header-class-name MyClass
+			  jextract CLI: --header-class-name MyClass
 			  jextractGUI: MyClass
 			The class name will be "MyClass".
 
 			Example 2:
-			  jexctract CLI: <absent>
+			  jextract CLI: <absent>
 			  jextractGUI: <empty string>
 			A class named "foo_h" will be generated for a header named "foo.h".
 			"""),
@@ -61,12 +61,12 @@ public enum CLOption {
 			The name of the package for the generated classes. If this option is not specified, then the unnamed package is used.
 
 			Example1:
-			  jexctract CLI: -t com.example.native
+			  jextract CLI: -t com.example.native
 			  jextractGUI: com.example.native
 			The package name will be "com.example.native".
 
 			Example 2:
-			  jexctract CLI: <absent>
+			  jextract CLI: <absent>
 			  jextractGUI: <empty string>
 			The package name will be "" (unnamed package).
 			"""),
@@ -79,7 +79,7 @@ public enum CLOption {
 			To add all directory paths in a directory, recuresively, drag and drop (⭳) the directory into the list.
 
 			Example:
-			  jexctract CLI: -I usr/home/foo -I usr/home/bar
+			  jextract CLI: -I usr/home/foo -I usr/home/bar
 			  jextractGUI:
 			    usr/home/foo
 			    usr/home/bar
@@ -98,18 +98,18 @@ public enum CLOption {
 			To add a single library name, enter a (valid) library name in the text field (⮠ ).
 
 			Example 1:
-			  jexctract CLI: -l GL
-			  jexctractGLI: GL
+			  jextract CLI: -l GL
+			  jextractGUI: GL
 			Adds a library named "GL".
 
 			Example 2:
-			  jexctract CLI: -l :libGL.so.1
-			  jexctractGLI: :libGL.so.1
+			  jextract CLI: -l :libGL.so.1
+			  jextractGUI: :libGL.so.1
 			Adds a library path "libGL.so.1" (in the current directory).
 
 			Example 3:
-			  jexctract CLI: -l :/usr/lib/libGL.so
-			  jexctractGUI: :/usr/lib/libGL.so
+			  jextract CLI: -l :/usr/lib/libGL.so
+			  jextractGUI: :/usr/lib/libGL.so
 			Adds a library path "/usr/lib/libGL.so".
 			"""),
 
@@ -118,18 +118,18 @@ public enum CLOption {
 			Specifies that libraries specified using -l are loaded in the loader symbol lookup (using either System::loadLibrary, \
 			or System::load). Useful if the libraries must be loaded from one of the paths in java.library.path.
 			"""),
-	
+
 	OUTPUT_PATH(List.of("--output"), " <path>",
 			"""
 			Specifies where to place the generated source files.
 
 			Example 1:
-			  jexctract CLI: --output /usr/dev/native
+			  jextract CLI: --output /usr/dev/native
 			  jextractGUI: /usr/dev/native
 			The source files will be generated in "/usr/dev/native".
 
 			Example 2:
-			  jexctract CLI: <absent>
+			  jextract CLI: <absent>
 			  jextractGUI: <empty string>
 			The source files will be generated in the current directory.
 			"""),
@@ -155,17 +155,17 @@ public enum CLOption {
 			for a header, no --include-[...] options is used. This replaces the need to use dump symbols files and filtering.
 
 			Example 1:
-			  jexctract CLI: --include-struct Point2d
-			  jexctracGLI: <ticked Point2d checkbox> 
+			  jextract CLI: --include-struct Point2d
+			  jextractGUI: <ticked Point2d checkbox>
 			Only the "Point2D" struct will have bindings generated for it.
 
 			Example 2:
-			  jexctract CLI: --include-function distance
-			  jexctracGLI: <ticked distance checkbox>
+			  jextract CLI: --include-function distance
+			  jextractGUI: <ticked distance checkbox>
 			Only the "distance" function will have bindings generated for it.
 
 			Example:
-			  jexctract CLI: <absent>
+			  jextract CLI: <absent>
 			  jextractGUI: <ticked header checkbox (ticks all subitems)>
 			All symbols will be included.
 
