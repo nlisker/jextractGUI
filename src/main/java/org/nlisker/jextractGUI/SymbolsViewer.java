@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,6 +67,7 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 
+import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignE;
@@ -74,15 +76,15 @@ import org.kordamp.ikonli.materialdesign2.MaterialDesignR;
 import org.nlisker.jextractGUI.model.CLOption;
 import org.nlisker.jextractGUI.model.Displayable;
 import org.nlisker.jextractGUI.model.Displayable.Header;
-import org.openjdk.jextract.Declaration.Scoped;
 import org.openjdk.jextract.JextractTool;
+import org.openjdk.jextract.Declaration.Scoped;
 import org.openjdk.jextract.JextractTool.JextractToolProvider;
 
 /// Viewer and controls for the header files and their content (*symbols*).
 @Accessors(fluent = true)
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displayable>>,
-			FilesInput<TreeItem<Displayable>>, DnDInput<TreeItem<Displayable>> {
+final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displayable>>, FilesInput<TreeItem<Displayable>>,
+			DnDInput<TreeItem<Displayable>> {
 
 	private static SymbolsViewer INSTANCE;
 
@@ -92,7 +94,8 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 	private static final List<String> EXTENTIONS = List.of(".h", ".c");
 
-	JextractToolProvider jextract = new JextractToolProvider();
+	HeaderParser parser = new HeaderParser();
+	Extractor extractor = new Extractor();
 
 	TreeView<Displayable> tree = new TreeView<>(new CheckBoxTreeItem<>());
 	ObservableList<Task<Void>> runningTasks = FXCollections.observableArrayList();
@@ -111,10 +114,10 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 	private SymbolsViewer() {
 		ObservableValue<Header> parentHeader = selectedItem().map(item -> {
-			while (!(item.getValue() instanceof Header)) {
+			while (!(item.getValue() instanceof Header header)) {
 				item = item.getParent();
 			}
-			return (Header) item.getValue();
+			return header;
 		});
 		// focus/selection doesn't update on deletion https://bugs.openjdk.org/browse/JDK-8248217
 		// so need to explicitly null the selection when there are no items after deletion
@@ -132,9 +135,9 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		HBox headerControls = createHeaderControls();
 
 		addDnD(tree);
-		var stackPane = ControlUtils.createAndAttachDropHint(tree, noItems);
+		Node dropHint = ControlUtils.createAndAttachDropHint(tree, noItems);
 
-		var vControls = new VBox(2, batchControls, headerControls, stackPane);
+		var vControls = new VBox(2, batchControls, headerControls, dropHint);
 		setCenter(vControls);
 	}
 
@@ -144,15 +147,15 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 		var runAllButton = ControlUtils.createButton(MaterialDesignA.ANIMATION_PLAY, Color.GREEN, "Generate files for all headers");
 		runAllButton.disableProperty().bind(noItems);
-		runAllButton.setOnAction(_ -> runCommandForAllHeaders());
+		runAllButton.setOnAction(_ -> extractor.runCommandForAllHeaders());
 
 		var writeAllButton = ControlUtils.createButton(MaterialDesignP.PENCIL_BOX_MULTIPLE, Color.DARKBLUE, "Print command for all headers");
 		writeAllButton.disableProperty().bind(noItems);
-		writeAllButton.setOnAction(_ -> writeCommandForAllHeaders());
+		writeAllButton.setOnAction(_ -> extractor.writeCommandForAllHeaders());
 
 		var progressIndicator = ControlUtils.createProgressIndicator(Bindings.isNotEmpty(runningTasks));
 
-		var batchControls = ControlUtils.createControls(detailedViewCB, expandButton, collapseButton,
+		HBox batchControls = ControlUtils.createControls(detailedViewCB, expandButton, collapseButton,
 				new Separator(Orientation.VERTICAL), runAllButton, writeAllButton,
 				new Separator(Orientation.VERTICAL), progressIndicator);
 		batchControls.setPadding(new Insets(2, 0, 0, 2));
@@ -167,7 +170,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		selectButton.setOnAction(_ -> addValidFiles());
 
 		var removeButton = ControlUtils.createRemoveButton();
-		var isSelectedHeader = selectedItem().map(item -> !(item.getValue() instanceof Header));
+		ObservableValue<Boolean> isSelectedHeader = selectedItem().map(item -> !(item.getValue() instanceof Header));
 		removeButton.disableProperty().bind(selectedItem().isNull().or(BooleanExpression.booleanExpression(isSelectedHeader)));
 		removeButton.setOnAction(_ -> {
 			var alert = new Alert(AlertType.CONFIRMATION);
@@ -186,22 +189,24 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 	private void configureTree() {
 		var simpleStringConverter = new DeclarationSimpleStringConverter();
 		var detailedStringConverter = new DeclarationDetailedStringConverter();
-		var scBinding = detailed.map(detailed -> detailed ? detailedStringConverter : simpleStringConverter);
+		ObservableValue<StringConverter<TreeItem<Displayable>>> stringConverterBinding = detailed
+				.map(detailed -> detailed ? detailedStringConverter : simpleStringConverter);
+		stringConverterBinding.addListener(_ -> tree.refresh());
+
 		Callback<TreeView<Displayable>, TreeCell<Displayable>> cellFactory = _ -> {
 			var checkBoxTreeCell = new CheckBoxTreeCell<Displayable>();
-			checkBoxTreeCell.converterProperty().bind(scBinding);
+			checkBoxTreeCell.converterProperty().bind(stringConverterBinding);
 			return checkBoxTreeCell;
 		};
-		scBinding.addListener(_ -> tree.refresh());
-
 		tree.setCellFactory(cellFactory);
+
 		tree.setShowRoot(false);
 		tree.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		tree.setOnKeyPressed(e -> { if (e.getCode() == KeyCode.DELETE) removeSelected(); });
 	}
 
 	private Button createCollapseExpandButton(boolean expand) {
-		var icon = expand ? MaterialDesignE.EXPAND_ALL : MaterialDesignC.COLLAPSE_ALL;
+		Ikon icon = expand ? MaterialDesignE.EXPAND_ALL : MaterialDesignC.COLLAPSE_ALL;
 		var button = ControlUtils.createButton(icon, Color.DARKBLUE, (expand ? "Expand" : "Collapse") + " all");
 		button.setOnAction(_ -> root().getChildren().forEach(typeItem -> {
 			typeItem.setExpanded(expand);
@@ -226,19 +231,27 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 	@Override
 	public boolean notContains(TreeItem<Displayable> item) {
-		return items().stream().map(TreeItem::getValue).map(Displayable::detailed).noneMatch(item.getValue().detailed()::equals);
+		return items().stream()
+				.map(TreeItem::getValue)
+				.map(Displayable::detailed)
+				.noneMatch(item.getValue().detailed()::equals);
 	}
 
 	@Override
 	public Optional<CheckBoxTreeItem<Displayable>> parseText(String text) {
-		return Optional.of(text).map(File::new).filter(SymbolsViewer::isValidFile).map(this::createHeaderItem);
+		return Optional.of(text)
+				.map(File::new)
+				.filter(SymbolsViewer::isValidFile)
+				.map(this::createHeaderItem);
 	}
 
 	@Override
 	public Optional<List<File>> filesSupplier() {
 		var fileChooser = new FileChooser();
 		fileChooser.setTitle("Select Headers");
-		var filter = EXTENTIONS.stream().map(ext -> "*" + ext).toList();
+		List<String> filter = EXTENTIONS.stream()
+				.map(ext -> "*" + ext)
+				.toList();
 		fileChooser.getExtensionFilters().add(new ExtensionFilter("Clang C", filter));
 		return Optional.ofNullable(fileChooser.showOpenMultipleDialog(JextractGUI.stage));
 	}
@@ -250,7 +263,9 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 	@Override
 	public Optional<CheckBoxTreeItem<Displayable>> parseDnDPath(Path path) {
-		return Optional.of(path.toFile()).filter(SymbolsViewer::isValidFile).map(this::createHeaderItem);
+		return Optional.of(path.toFile())
+				.filter(SymbolsViewer::isValidFile)
+				.map(this::createHeaderItem);
 	}
 
 	private static boolean isValidFile(File file) {
@@ -265,37 +280,6 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		return headerItem;
 	}
 
-	private void addErrorButtonsForHeader(CheckBoxTreeItem<Displayable> headerItem, String message) {
-		var reloadButton = ControlUtils.createButton(MaterialDesignR.REFRESH_CIRCLE, Color.GREEN, "Reload header");
-		reloadButton.setOnAction(_ -> {
-			items().remove(headerItem);
-			add(headerItem);
-		});
-
-		var errorButton = ControlUtils.createButton(MaterialDesignA.ALERT, Color.DARKBLUE, "Show error");
-		errorButton.setOnAction(_ -> new Alert(AlertType.INFORMATION, message, ButtonType.OK).show());
-
-		var buttons = new HBox(5, errorButton, reloadButton);
-		buttons.setPadding(new Insets(0, 0, 0, 5));
-		headerItem.setGraphic(buttons);
-	}
-
-	private void addOperationsButtonsForHeader(CheckBoxTreeItem<Displayable> headerItem) {
-		BooleanBinding notSelected = (headerItem.selectedProperty().or(headerItem.indeterminateProperty())).not();
-
-		var runButton = ControlUtils.createButton(MaterialDesignP.PLAY_BOX, Color.GREEN, "Generate files");
-		runButton.disableProperty().bind(notSelected);
-		runButton.setOnAction(_ -> runCommandForHeader(headerItem));
-
-		var writeButton = ControlUtils.createButton(MaterialDesignP.PENCIL_BOX, Color.DARKBLUE, "Print command");
-		writeButton.disableProperty().bind(notSelected);
-		writeButton.setOnAction(_ -> writeCommandForHeader(headerItem));
-
-		var buttons = new HBox(5, runButton, writeButton);
-		buttons.setPadding(new Insets(0, 0, 0, 5));
-		headerItem.setGraphic(buttons);
-		headerItem.setExpanded(true);
-	}
 
 	@Override
 	public void add(TreeItem<Displayable> treeHeaderItem) {
@@ -304,7 +288,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 			@Override
 			protected Void call() throws IOException {
-				populateHeaderTree(headerItem);
+				parser.populateHeaderTree(headerItem);
 				addOperationsButtonsForHeader(headerItem);
 				addHeaderItem(headerItem);
 				return null;
@@ -343,6 +327,38 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		thread.start();
 	}
 
+	private void addErrorButtonsForHeader(CheckBoxTreeItem<Displayable> headerItem, String message) {
+		var reloadButton = ControlUtils.createButton(MaterialDesignR.REFRESH_CIRCLE, Color.GREEN, "Reload header");
+		reloadButton.setOnAction(_ -> {
+			items().remove(headerItem);
+			add(headerItem);
+		});
+
+		var errorButton = ControlUtils.createButton(MaterialDesignA.ALERT, Color.DARKBLUE, "Show error");
+		errorButton.setOnAction(_ -> new Alert(AlertType.INFORMATION, message, ButtonType.OK).show());
+
+		var buttons = new HBox(5, errorButton, reloadButton);
+		buttons.setPadding(new Insets(0, 0, 0, 5));
+		headerItem.setGraphic(buttons);
+	}
+
+	private void addOperationsButtonsForHeader(CheckBoxTreeItem<Displayable> headerItem) {
+		BooleanBinding notSelected = (headerItem.selectedProperty().or(headerItem.indeterminateProperty())).not();
+
+		var runButton = ControlUtils.createButton(MaterialDesignP.PLAY_BOX, Color.GREEN, "Generate files");
+		runButton.disableProperty().bind(notSelected);
+		runButton.setOnAction(_ -> extractor.runCommandForHeader(headerOf(headerItem)));
+
+		var writeButton = ControlUtils.createButton(MaterialDesignP.PENCIL_BOX, Color.DARKBLUE, "Print command");
+		writeButton.disableProperty().bind(notSelected);
+		writeButton.setOnAction(_ -> Extractor.writeCommandForHeader(headerItem));
+
+		var buttons = new HBox(5, runButton, writeButton);
+		buttons.setPadding(new Insets(0, 0, 0, 5));
+		headerItem.setGraphic(buttons);
+		headerItem.setExpanded(true);
+	}
+
 	private void addHeaderItem(CheckBoxTreeItem<Displayable> headerItem) {
 		Platform.runLater(() -> {
 			root().getChildren().add(headerItem);
@@ -351,92 +367,10 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		});
 	}
 
-	private static void populateHeaderTree(CheckBoxTreeItem<Displayable> headerItem) {
-		var header = (Header) headerItem.getValue();
-		parseHeader(header);
-
-		header.includeKindGroups().forEach(kindGroup -> {
-			var kindGroupItem = new CheckBoxTreeItem<Displayable>(kindGroup, null, true);
-			kindGroup.included(kindGroupItem.selectedProperty().or(kindGroupItem.indeterminateProperty()));
-			kindGroupItem.setExpanded(true);
-
-			kindGroup.includeDeclarations().forEach(decl -> {
-				var declItem = new CheckBoxTreeItem<Displayable>(decl, null, true);
-				decl.included(declItem.selectedProperty());
-				kindGroupItem.getChildren().add(declItem);
-			});
-
-			headerItem.getChildren().add(kindGroupItem);
-		});
+	/// {@return the `Header` of the header tree item}
+	private static Header headerOf(CheckBoxTreeItem<Displayable> headerItem) {
+		return (Header) headerItem.getValue();
 	}
-
-	private static void parseHeader(Header header) {
-		var options = header.includes().stream().flatMap(include -> List.of("-I", include.toString()).stream()).toArray(String[]::new);
-		Scoped headerScope = JextractTool.parse(List.of(header.file().toString()), options);
-		header.populate(headerScope);
-	}
-
-
-	/// Runs the commands for all selected or indeterminate headers.
-	private void runCommandForAllHeaders() {
-		root().getChildren().stream()
-			.map(CheckBoxTreeItem.class::cast)
-			.filter(SymbolsViewer::isHeaderTreeItemRelevant)
-			.forEach(this::runCommandForHeader);
-	}
-
-	/// Runs the command for the requested header.
-	private void runCommandForHeader(CheckBoxTreeItem<Displayable> headerItem) {
-		var oldErrorStream = System.err;
-		try (var byteStream = new ByteArrayOutputStream();
-			 var newErrorStream = new PrintStream(byteStream)) {
-			System.setErr(newErrorStream);
-
-			List<String> commandForHeader = ((Header) headerItem.getValue()).createCommandSegments();
-			jextract.run(System.out, System.err, commandForHeader.toArray(new String[0]));
-
-			System.err.flush();
-			var errorMessage = byteStream.toString();
-			if (!errorMessage.isBlank()) {
-				new Alert(AlertType.WARNING, headerItem.getValue().simple() + "\n" + errorMessage, ButtonType.OK).show();
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			new Alert(AlertType.ERROR, e.getMessage(), ButtonType.OK).show();
-		} finally {
-			System.setErr(oldErrorStream);
-		}
-		var output = ((Header) headerItem.getValue()).outputPath().get();
-		new Alert(AlertType.INFORMATION, "Successfully generated bindings at " + output + ".", ButtonType.OK).show();
-	}
-
-	/// Writes the commands for all selected or indeterminate headers to the console. Each command is separated by new lines.
-	private void writeCommandForAllHeaders() {
-		root().getChildren().stream()
-			.map(CheckBoxTreeItem.class::cast)
-			.filter(SymbolsViewer::isHeaderTreeItemRelevant)
-			.map(SymbolsViewer::getCommandForHeaderTreeItem)
-			.reduce((c1, c2) -> c1 + "\n\n" + c2)
-			.ifPresent(SymbolsViewer::writeCommand);
-	}
-
-	/// Writes the command for the requested header to the console.
-	private static void writeCommandForHeader(CheckBoxTreeItem<Displayable> headerItem) {
-		writeCommand(getCommandForHeaderTreeItem(headerItem));
-	}
-
-	private static boolean isHeaderTreeItemRelevant(CheckBoxTreeItem<Displayable> headerItem) {
-		return headerItem.isSelected() || headerItem.isIndeterminate();
-	}
-
-	private static String getCommandForHeaderTreeItem(CheckBoxTreeItem<Displayable> headerItem) {
-		return ((Header) headerItem.getValue()).createCommandText();
-	}
-
-	private static void writeCommand(String command) {
-		MainView.get().console.setText(command);
-	}
-
 
 	private static class DeclarationDetailedStringConverter extends StringConverter<TreeItem<Displayable>> {
 
@@ -461,6 +395,125 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		@Override
 		public TreeItem<Displayable> fromString(String string) {
 			return null; // tree is not editable
+		}
+	}
+
+	private class HeaderParser {
+
+		private void populateHeaderTree(CheckBoxTreeItem<Displayable> headerItem) {
+			var header = headerOf(headerItem);
+			// 1st pass to populate the header model
+			popoulateHeader(header);
+
+			// TODO 2nd pass to populate the tree, consider doing it in one pass for both the model and the controls
+			header.includeKindGroups().forEach(kindGroup -> {
+				var kindGroupItem = new CheckBoxTreeItem<Displayable>(kindGroup, null, true);
+				kindGroup.included(kindGroupItem.selectedProperty().or(kindGroupItem.indeterminateProperty()));
+				kindGroupItem.setExpanded(true);
+
+				kindGroup.includeDeclarations().forEach(decl -> {
+					var declItem = new CheckBoxTreeItem<Displayable>(decl, null, true);
+					decl.included(declItem.selectedProperty());
+					kindGroupItem.getChildren().add(declItem);
+				});
+
+				headerItem.getChildren().add(kindGroupItem);
+			});
+		}
+
+		private void popoulateHeader(Header header) {
+			// Always empty because the user can't put includes before parsing
+			String[] options = header.includes().stream()
+					.flatMap(include -> List.of(CLOption.INCLUDES_PATH.commands().getLast(), include.toString()).stream())
+					.toArray(String[]::new);
+			System.out.println("options = " + Arrays.toString(options));
+
+			PrintStream oldErrorStream = System.err;
+			try (var byteStream = new ByteArrayOutputStream();
+				 var newErrorStream = new PrintStream(byteStream)) {
+				System.setErr(newErrorStream);
+
+				Scoped headerScope = JextractTool.parse(List.of(header.file().toString()), options);
+				header.populate(headerScope);
+
+				System.err.flush();
+				String errorMessage = byteStream.toString();
+				if (!errorMessage.isBlank()) {
+					Platform.runLater(() -> new Alert(AlertType.WARNING, header.detailed() + "\n" + errorMessage, ButtonType.OK).show());
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				Platform.runLater(() -> new Alert(AlertType.ERROR, e.getMessage(), ButtonType.OK).show());
+			} finally {
+				System.setErr(oldErrorStream);
+			}
+		}
+	}
+
+	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+	private class Extractor {
+
+		JextractToolProvider jextract = new JextractToolProvider();
+
+		/// Writes the commands for all selected or indeterminate headers to the console. Each command is separated by new lines.
+		private void writeCommandForAllHeaders() {
+			root().getChildren().stream()
+				.map(CheckBoxTreeItem.class::cast)
+				.filter(Extractor::isHeaderTreeItemRelevant)
+				.map(SymbolsViewer::headerOf)
+				.map(Header::createCommandText)
+				.reduce((c1, c2) -> c1 + "\n\n" + c2)
+				.ifPresent(Extractor::writeCommand);
+		}
+
+		/// Runs the commands for all selected or indeterminate headers.
+		private void runCommandForAllHeaders() {
+			root().getChildren().stream()
+				.map(CheckBoxTreeItem.class::cast)
+				.filter(Extractor::isHeaderTreeItemRelevant)
+				.map(SymbolsViewer::headerOf)
+				.forEach(this::runCommandForHeader);
+		}
+
+		private static boolean isHeaderTreeItemRelevant(CheckBoxTreeItem<Displayable> headerItem) {
+			return headerItem.isSelected() || headerItem.isIndeterminate();
+		}
+
+		/// Writes the command for the requested header to the console.
+		private static void writeCommandForHeader(CheckBoxTreeItem<Displayable> headerItem) {
+			String commandText = headerOf(headerItem).createCommandText();
+			writeCommand(commandText);
+		}
+
+		private static void writeCommand(String command) {
+			MainView.get().console.setText(command);
+		}
+
+		/// Runs the command for the requested header.
+		void runCommandForHeader(Header header) {
+			var oldErrorStream = System.err;
+			try (var byteStream = new ByteArrayOutputStream();
+				 var newErrorStream = new PrintStream(byteStream)) {
+				System.setErr(newErrorStream);
+
+				List<String> commandForHeader = header.createCommandSegments();
+				jextract.run(System.out, System.err, commandForHeader.toArray(new String[0]));
+
+				System.err.flush();
+				var errorMessage = byteStream.toString();
+				if (!errorMessage.isBlank()) {
+					new Alert(AlertType.WARNING, header.simple() + "\n" + errorMessage, ButtonType.OK).show();
+					return;
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				new Alert(AlertType.ERROR, e.getMessage(), ButtonType.OK).show();
+			} finally {
+				System.setErr(oldErrorStream);
+			}
+			var output = header.outputPath().get();
+			output = output.isBlank() ? "current directory" : output;
+			new Alert(AlertType.INFORMATION, "Successfully generated bindings at " + output + ".", ButtonType.OK).show();
 		}
 	}
 }
