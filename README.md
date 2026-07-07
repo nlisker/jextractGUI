@@ -2,24 +2,28 @@
 
 jextractGUI is a GUI wrapper for the [jextract](https://github.com/openjdk/jextract) tool written in [JavaFX](https://github.com/openjdk/jfx).
 If offers several benefits over using the command line tool:
-* Easy symbol inspection and filtering. No need to dump symbols into an `@argfile` and manually specify the ones to include.
-* A more detailed presentation of the header symbols.
-* Working with multiple headers at once, including batch running.
-* Syntax validation for arguments (the CLI uses unchecked strings).
-* Ability to display jextract run commands for inspection before running, or for copying into a CLI/script.
+* Symbol inspection and filtering. No need to dump symbols into an `@argfile` and manually specify the ones to include.
+* Detailed presentation of the header symbols.
+* Automatic command creation for inspection or copying into a CLI/script. The CLI uses error-prone unchecked strings.
+* Ease of use when working with multiple headers at once.
 
 ![screenshot](doc/screenshot.png)
 
 ## Download
 
-Pre-built executables (using jpackage) for Windows, Linux, and MacOS are available under [Releases](https://github.com/nlisker/jextractGUI/releases).
-Jextract dependencies are included.
+Pre-built executables (using [jpackage](https://dev.java/learn/jvm/tool/jpackage/)) for Windows, Linux, and MacOS are available
+under [Releases](https://github.com/nlisker/jextractGUI/releases). jextract dependencies are included.
 
 ## Building and running from source
 
-* From Gradle: use the provided Gradle wrapper. The pre-built executables were created with the `jpackageImage` task.
-* From the IDE: compile with `--enable-preview` and run with `--enable-preview --enable-native-access=org.openjdk.jextract` (these are already configured in Gradle).
+* From Gradle: use the provided Gradle wrapper.
+  * `compileJava` downloads the jextract dependencies.
+  * `run` starts the application.
+  * `jpackageImage` builds the executables.
+* From the IDE: compile with `--enable-preview` and run with `--enable-preview --enable-native-access=org.openjdk.jextract`.
 
-Gradle downloads the jextract dependencies.
+---
+
+💡Tracing of native calls can be enabled with `-Djextract.trace.downcalls=true` for both the pre-built executables and local builds.
 
 IDE developers are welcome to create an integration (e.g., via a plugin) based on this work into their IDE.
