@@ -72,12 +72,11 @@ import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignE;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignP;
-import org.kordamp.ikonli.materialdesign2.MaterialDesignR;
 import org.nlisker.jextractGUI.model.CLOption;
 import org.nlisker.jextractGUI.model.Displayable;
 import org.nlisker.jextractGUI.model.Displayable.Header;
-import org.openjdk.jextract.JextractTool;
 import org.openjdk.jextract.Declaration.Scoped;
+import org.openjdk.jextract.JextractTool;
 import org.openjdk.jextract.JextractTool.JextractToolProvider;
 
 /// Viewer and controls for the header files and their content (*symbols*).
@@ -273,10 +272,9 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 	}
 
 	private CheckBoxTreeItem<Displayable> createHeaderItem(File headerFile) {
-		var headerDisplay = new Header(headerFile);
-		var headerItem = new CheckBoxTreeItem<Displayable>(headerDisplay, null, true);
-		headerDisplay.requiresIncludeArgs(headerItem.indeterminateProperty());
-		addOperationsButtonsForHeader(headerItem);
+		var header = new Header(headerFile);
+		var headerItem = new CheckBoxTreeItem<Displayable>(header, null, true);
+		header.requiresIncludeArgs(headerItem.indeterminateProperty());
 		return headerItem;
 	}
 
@@ -307,39 +305,12 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 			if (message == null) {
 				return;
 			}
-			if (message.contains("file not found")) {
-				message = ex.getMessage().replace("fatal error: ", "");
-				message += ".\nAdd the including folders to the Includes list and click Reload (⟳).";
-				addErrorButtonsForHeader(headerItem, message);
-				addHeaderItem(headerItem);
-				new Alert(AlertType.INFORMATION, message, ButtonType.OK).show();
-				return;
-			}
-			if (message.contains("clang")) {
-				message = "Clang was not found on the PATH variable. On Windows, add the /bin directory of the jextract binaries "
-						+ "to the PATH, and on MacOS and Linux add the /lib directory. Then restart the application.";
-			}
 			new Alert(AlertType.ERROR, message, ButtonType.OK).show();
 		});
 
 		var thread = new Thread(task);
 		thread.setDaemon(true);
 		thread.start();
-	}
-
-	private void addErrorButtonsForHeader(CheckBoxTreeItem<Displayable> headerItem, String message) {
-		var reloadButton = ControlUtils.createButton(MaterialDesignR.REFRESH_CIRCLE, Color.GREEN, "Reload header");
-		reloadButton.setOnAction(_ -> {
-			items().remove(headerItem);
-			add(headerItem);
-		});
-
-		var errorButton = ControlUtils.createButton(MaterialDesignA.ALERT, Color.DARKBLUE, "Show error");
-		errorButton.setOnAction(_ -> new Alert(AlertType.INFORMATION, message, ButtonType.OK).show());
-
-		var buttons = new HBox(5, errorButton, reloadButton);
-		buttons.setPadding(new Insets(0, 0, 0, 5));
-		headerItem.setGraphic(buttons);
 	}
 
 	private void addOperationsButtonsForHeader(CheckBoxTreeItem<Displayable> headerItem) {
@@ -511,9 +482,9 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 			} finally {
 				System.setErr(oldErrorStream);
 			}
-			var output = header.outputPath().get();
+			String output = header.outputPath().get();
 			output = output.isBlank() ? "current directory" : output;
-			new Alert(AlertType.INFORMATION, "Successfully generated bindings at " + output + ".", ButtonType.OK).show();
+			new Alert(AlertType.INFORMATION, "Generated bindings at " + output + ".", ButtonType.OK).show();
 		}
 	}
 }
