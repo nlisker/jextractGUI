@@ -111,7 +111,9 @@ public sealed interface Displayable {
 
 		/// Creates the jextract command a text, ready to be passed to it. Spaced segments are wrapped in quotes.
 		public String createCommandText() {
-			return createCommandSegments().stream().map(s -> s.contains(" ") ? "\"" + s + "\"" : s).collect(joining(" "));
+			return createCommandSegments().stream()
+					.map(s -> s.contains(" ") ? "\"" + s + "\"" : s)
+					.collect(joining(" "));
 		}
 
 		/// Creates the jextract command as segments, including all the header-specific options like class and package names,
