@@ -246,9 +246,9 @@ jlink {
 	}
 	jpackage {
 		icon = iconPath
-		imageOptions = ["--app-content", "LICENSE.txt",
-				"--app-content", "NOTICE.txt",
-				"--verbose"]
+		imageOptions = ["--verbose",
+				"--app-content", "LICENSE.txt",
+				"--app-content", "NOTICE.txt"]
 	}
 }
 
