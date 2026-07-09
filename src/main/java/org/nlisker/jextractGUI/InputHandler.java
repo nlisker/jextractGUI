@@ -90,7 +90,11 @@ interface FilesInput<T> extends InputHandler<T> {
 
 	/// Adds the selected files if valid.
 	default void addValidFiles() {
-		filesSupplier().stream().flatMap(List::stream).map(this::parseSelectedFile).filter(this::notContains).forEach(this::add);
+		filesSupplier().stream()
+				.flatMap(List::stream)
+				.map(this::parseSelectedFile)
+				.filter(this::notContains)
+				.forEach(this::add);
 	}
 }
 
@@ -103,11 +107,16 @@ interface DnDInput<T> extends InputHandler<T> {
 	Optional<? extends T> parseDnDPath(Path path);
 
 	default boolean findValidFiles(Stream<Path> paths) {
-		return paths.map(this::parseDnDPath).flatMap(Optional::stream).anyMatch(this::notContains);
+		return paths.map(this::parseDnDPath)
+				.flatMap(Optional::stream)
+				.anyMatch(this::notContains);
 	}
 
 	default void addValidFiles(Stream<Path> paths) {
-		paths.map(this::parseDnDPath).flatMap(Optional::stream).filter(this::notContains).forEach(this::add);
+		paths.map(this::parseDnDPath)
+				.flatMap(Optional::stream)
+				.filter(this::notContains)
+				.forEach(this::add);
 	}
 
 	default void addDnD(Node target) {
@@ -120,7 +129,9 @@ interface DnDInput<T> extends InputHandler<T> {
 	}
 
 	private Stream<Path> paths(DragEvent event) {
-		return event.getDragboard().getFiles().stream().map(File::toPath).flatMap(this::walk);
+		return event.getDragboard().getFiles().stream()
+				.map(File::toPath)
+				.flatMap(this::walk);
 	}
 
 	private Stream<Path> walk(Path path) {
