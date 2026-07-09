@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -392,18 +391,12 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		}
 
 		private void popoulateHeader(Header header) {
-			// Always empty because the user can't put includes before parsing
-			String[] options = header.includes().stream()
-					.flatMap(include -> List.of(CLOption.INCLUDES_PATH.commands().getLast(), include.toString()).stream())
-					.toArray(String[]::new);
-			System.out.println("options = " + Arrays.toString(options));
-
 			PrintStream oldErrorStream = System.err;
 			try (var byteStream = new ByteArrayOutputStream();
 				 var newErrorStream = new PrintStream(byteStream)) {
 				System.setErr(newErrorStream);
 
-				Scoped headerScope = JextractTool.parse(List.of(header.file().toString()), options);
+				Scoped headerScope = JextractTool.parse(List.of(header.file().toString()));
 				header.populate(headerScope);
 
 				System.err.flush();
