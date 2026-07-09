@@ -46,8 +46,8 @@ final class LibrariesViewer extends FileListViewer {
 		var helpButton = ControlUtils.createHelpButton(CLOption.USE_SYSTEM_LOAD_LIBRARIES);
 
 		var useSystemCheckBox = new CheckBox("Use System to load libraries");
-		useSystemCheckBox.disableProperty().bind(symbolsViewer.noFocus());
-		symbolsViewer.noFocus().subscribe(noFocus -> { if (noFocus) useSystemCheckBox.setSelected(false); });
+		useSystemCheckBox.disableProperty().bind(symbolsViewer.notFocused());
+		symbolsViewer.notFocused().subscribe(noFocus -> { if (noFocus) useSystemCheckBox.setSelected(false); });
 		ControlUtils.bindFocusedHeader(useSystemCheckBox.selectedProperty(), Header::useSystemLoadLibraries);
 
 		return ControlUtils.createControls(helpButton, useSystemCheckBox);
@@ -77,7 +77,9 @@ final class LibrariesViewer extends FileListViewer {
 
 	@Override
 	public Optional<File> parseDnDPath(Path path) {
-		return Optional.of(path.toFile()).filter(this::isValidFile).map(this::parseSelectedFile);
+		return Optional.of(path.toFile())
+				.filter(this::isValidFile)
+				.map(this::parseSelectedFile);
 	}
 
 	private boolean isValidFile(File file) {

@@ -105,7 +105,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 	ObjectProperty<Header> focusedHeader = new SimpleObjectProperty<>();
 
 	@Getter(value = AccessLevel.PACKAGE)
-	BooleanBinding noFocus = focusedHeader.isNull();
+	BooleanBinding notFocused = focusedHeader.isNull();
 
 	private CheckBoxTreeItem<Displayable> root() {
 		return (CheckBoxTreeItem<Displayable>) tree.getRoot();
@@ -302,10 +302,9 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		task.exceptionProperty().subscribe((_, ex) -> {
 			ex.printStackTrace();
 			String message = ex.getMessage();
-			if (message == null) {
-				return;
+			if (message != null) {
+				new Alert(AlertType.ERROR, message, ButtonType.OK).show();
 			}
-			new Alert(AlertType.ERROR, message, ButtonType.OK).show();
 		});
 
 		var thread = new Thread(task);
@@ -429,21 +428,21 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		/// Writes the commands for all selected or indeterminate headers to the console. Each command is separated by new lines.
 		private void writeCommandForAllHeaders() {
 			root().getChildren().stream()
-				.map(CheckBoxTreeItem.class::cast)
-				.filter(Extractor::isHeaderTreeItemRelevant)
-				.map(SymbolsViewer::headerOf)
-				.map(Header::createCommandText)
-				.reduce((c1, c2) -> c1 + "\n\n" + c2)
-				.ifPresent(Extractor::writeCommand);
+					.map(CheckBoxTreeItem.class::cast)
+					.filter(Extractor::isHeaderTreeItemRelevant)
+					.map(SymbolsViewer::headerOf)
+					.map(Header::createCommandText)
+					.reduce((c1, c2) -> c1 + "\n\n" + c2)
+					.ifPresent(Extractor::writeCommand);
 		}
 
 		/// Runs the commands for all selected or indeterminate headers.
 		private void runCommandForAllHeaders() {
 			root().getChildren().stream()
-				.map(CheckBoxTreeItem.class::cast)
-				.filter(Extractor::isHeaderTreeItemRelevant)
-				.map(SymbolsViewer::headerOf)
-				.forEach(this::runCommandForHeader);
+					.map(CheckBoxTreeItem.class::cast)
+					.filter(Extractor::isHeaderTreeItemRelevant)
+					.map(SymbolsViewer::headerOf)
+					.forEach(this::runCommandForHeader);
 		}
 
 		private static boolean isHeaderTreeItemRelevant(CheckBoxTreeItem<Displayable> headerItem) {

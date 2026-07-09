@@ -54,7 +54,7 @@ abstract class FileListViewer extends BorderPane implements TextInput<File>, Fil
 
 	private void configureList(Function<Header, ObservableList<File>> property) {
 		listView.itemsProperty().bind(symbolsViewer.focusedHeader().map(property::apply));
-		listView.disableProperty().bind(symbolsViewer.noFocus());
+		listView.disableProperty().bind(symbolsViewer.notFocused());
 		listView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		listView.setEditable(true);
 		listView.setPrefHeight(150);
@@ -77,7 +77,7 @@ abstract class FileListViewer extends BorderPane implements TextInput<File>, Fil
 		Text title = ControlUtils.createTitle(titleText);
 
 		var selectButton = ControlUtils.createSelectButton("Select path");
-		selectButton.disableProperty().bind(symbolsViewer.noFocus());
+		selectButton.disableProperty().bind(symbolsViewer.notFocused());
 		selectButton.setOnAction(_ -> addValidFiles());
 
 		var removeButton = ControlUtils.createRemoveButton();
@@ -85,7 +85,7 @@ abstract class FileListViewer extends BorderPane implements TextInput<File>, Fil
 		removeButton.setOnAction(_ -> removeSelected());
 
 		Node freeTextControls = ControlUtils.createFreeTextControl(tooltipText, promptText, 100, this::addValidText);
-		freeTextControls.disableProperty().bind(symbolsViewer.noFocus());
+		freeTextControls.disableProperty().bind(symbolsViewer.notFocused());
 
 		var hControls = ControlUtils.createControls(helpButton, title, selectButton, removeButton, freeTextControls);
 

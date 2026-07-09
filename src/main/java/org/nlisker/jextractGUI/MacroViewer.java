@@ -64,7 +64,7 @@ final class MacroViewer extends BorderPane implements TextInput<Macro> {
 
 	private void configureTable() {
 		table.itemsProperty().bind(symbolsViewer.focusedHeader().map(Header::macros));
-		table.disableProperty().bind(symbolsViewer.noFocus());
+		table.disableProperty().bind(symbolsViewer.notFocused());
 		table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		table.setEditable(true);
 		table.setPrefHeight(150);
@@ -80,7 +80,7 @@ final class MacroViewer extends BorderPane implements TextInput<Macro> {
 		removeButton.setOnAction(_ -> removeSelected());
 
 		Node freeTextControls = ControlUtils.createFreeTextControl("Enter macro", "A=42", 100, this::addValidText);
-		freeTextControls.disableProperty().bind(symbolsViewer.noFocus());
+		freeTextControls.disableProperty().bind(symbolsViewer.notFocused());
 
 		var hControls = ControlUtils.createControls(helpButton, title, removeButton, freeTextControls);
 
