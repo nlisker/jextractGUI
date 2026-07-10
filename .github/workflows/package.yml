@@ -54,7 +54,7 @@ jobs:
       artifact_name: ${{ steps.setName.outputs.artifact_name }}
     steps:
     - name: Checkout sources
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: Setup Java 
       uses: actions/setup-java@v5
