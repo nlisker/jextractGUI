@@ -18,6 +18,7 @@ package org.nlisker.jextractGUI.model;
 import static java.util.stream.Collectors.*;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -26,22 +27,18 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ObservableBooleanValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
 
-import org.nlisker.jextractGUI.model.Displayable.IncludeKindGroup.IncludeKind;
 import org.openjdk.jextract.Declaration;
 import org.openjdk.jextract.Declaration.ClangAttributes;
-import org.openjdk.jextract.Declaration.Scoped;
 
 /// An item to be displayed in the symbols tree. It can be a header, a type under a header, or a declaration under a type.
 /// Each item can be converted to a part of the run command using [#asOption]. For example:
@@ -68,10 +65,12 @@ public sealed interface Displayable {
 	@Getter
 	@Accessors(fluent = true)
 	@RequiredArgsConstructor
+	@EqualsAndHashCode(of = "path")
 	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	final class Header implements Displayable {
 
-		File file;
+		/// The header file.
+		Path path;
 
 		StringProperty packageName = new SimpleStringProperty("");
 		StringProperty className = new SimpleStringProperty("");
@@ -81,27 +80,14 @@ public sealed interface Displayable {
 		ObservableList<Macro> macros = FXCollections.observableArrayList();
 		BooleanProperty useSystemLoadLibraries = new SimpleBooleanProperty();
 
-		List<IncludeKindGroup> includeKindGroups = new ArrayList<>();
-
-		@Setter
-		@NonFinal
-		ObservableBooleanValue requiresIncludeArgs;
-
-		public void populate(Scoped header) {
-			header.members().stream()
-					.collect(groupingBy(IncludeKind::fromDeclaration, mapping(IncludeKindDeclaration::new, toList())))
-					.forEach((includeKind, includeKindDeclarations) ->
-							includeKindGroups.add(new IncludeKindGroup(includeKind, includeKindDeclarations)));
-		}
-
 		@Override
 		public String simple() {
-			return file.getName().toString();
+			return path.getFileName().toString();
 		}
 
 		@Override
 		public String detailed() {
-			return file.toString();
+			return path.toString();
 		}
 
 		@Override
@@ -109,16 +95,9 @@ public sealed interface Displayable {
 			return detailed();
 		}
 
-		/// Creates the jextract command a text, ready to be passed to it. Spaced segments are wrapped in quotes.
-		public String createCommandText() {
-			return createCommandSegments().stream()
-					.map(s -> s.contains(" ") ? "\"" + s + "\"" : s)
-					.collect(joining(" "));
-		}
-
 		/// Creates the jextract command as segments, including all the header-specific options like class and package names,
-		/// includes, macros etc.
-		public List<String> createCommandSegments() {
+		/// includes, macros etc., but not included symbols.
+		public List<String> createCommandOptions() {
 			var args = new ArrayList<String>();
 
 			args.add(asOption());
@@ -150,110 +129,66 @@ public sealed interface Displayable {
 				args.add(outputPath.get());
 			}
 
-			if (requiresIncludeArgs() != null && requiresIncludeArgs().get()) {
-				addIncludesArgs(args);
-			}
-
 			return args;
-		}
-
-		/// Adds the [#IncludeKind] arguments.
-		private void addIncludesArgs(List<String> args) {
-			for (var kindGroup : includeKindGroups()) {
-				if (kindGroup.included().get()) {
-					for (var kindDecl : kindGroup.includeDeclarations()) {
-						if (kindDecl.included().get()) {
-							args.add(kindGroup.asOption());
-							args.add(kindDecl.asOption());
-						}
-					}
-				}
-			}
 		}
 	}
 
-	/// Representation of an [IncludeKind] used in the 2nd level of the tree. Shown as its name and number of leaves.
-	@Accessors(fluent = true)
-	@RequiredArgsConstructor
-	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-	final class IncludeKindGroup implements Displayable {
+	/// Valid types to use for the `--include-[function,constant,struct,union,typedef,var]` option. Used in the 2nd level of the
+	/// tree. Shown as its name and number of leaves.
+	public enum IncludeKind implements Displayable {
 
-		IncludeKind includeKind;
-
-		@Getter
-		List<IncludeKindDeclaration> includeDeclarations;
-
-		@Getter
-		@Setter
-		@NonFinal
-		ObservableBooleanValue included;
+		FUNCTION,
+		/// Macro or enum constant
+		CONSTANT,
+		TYPEDEF,
+		STRUCT,
+		UNION,
+		VAR;
 
 		@Override
 		public String simple() {
-			return includeKind.name().toLowerCase();
+			return name().toLowerCase();
 		}
 
 		@Override
 		public String detailed() {
-			return simple() + " (" + includeDeclarations.size() + ")";
+			return simple() /*+ " (" + includeDeclarations.size() + ")"*/;
 		}
 
 		@Override
 		public String asOption() {
-			return includeKind.optionName();
+			return optionName();
 		}
 
-		/// Valid types to use for the `--include-[function,constant,struct,union,typedef,var]` option.
-		enum IncludeKind {
+		private String optionName() {
+			return "--include-" + name().toLowerCase();
+		}
 
-			FUNCTION,
-			/// Macro or enum constant
-			CONSTANT,
-			TYPEDEF,
-			STRUCT,
-			UNION,
-			VAR;
+		public static IncludeKind fromDeclaration(Declaration decl) {
+			return switch (decl) {
+				case Declaration.Function _ -> FUNCTION;
+				case Declaration.Typedef _ -> TYPEDEF;
+				case Declaration.Variable _ -> VAR;
+				case Declaration.Constant _ -> CONSTANT;
+//				case Declaration.Bitfield _ -> ?; // supported?
+				case Declaration.Scoped scoped -> fromScoped(scoped);
+				default -> throw new IllegalArgumentException("Unsupported Declaration: " + decl.toString());
+			};
+		}
 
-			private String optionName() {
-				return "--include-" + name().toLowerCase();
-			}
-
-			public static IncludeKind fromDeclaration(Declaration decl) {
-				return switch (decl) {
-					case Declaration.Function _ -> FUNCTION;
-					case Declaration.Typedef _ -> TYPEDEF;
-					case Declaration.Variable _ -> VAR;
-					case Declaration.Constant _ -> CONSTANT;
-//					case Declaration.Bitfield _ -> ?; // supported?
-					case Declaration.Scoped scoped -> fromScoped(scoped);
-					default -> throw new IllegalArgumentException("Unsupported Declaration: " + decl.toString());
-				};
-			}
-
-			private static IncludeKind fromScoped(Declaration.Scoped scoped) {
-				return switch (scoped.kind()) {
-					case STRUCT -> STRUCT;
-					case UNION -> UNION;
-					case ENUM -> CONSTANT;
-					case BITFIELDS -> throw new IllegalArgumentException("BITFIELDS not supported");
-					case TOPLEVEL -> throw new IllegalArgumentException("TOPLEVEL can't be nested");
-				};
-			}
+		private static IncludeKind fromScoped(Declaration.Scoped scoped) {
+			return switch (scoped.kind()) {
+				case STRUCT -> STRUCT;
+				case UNION -> UNION;
+				case ENUM -> CONSTANT;
+				case BITFIELDS -> throw new IllegalArgumentException("BITFIELDS not supported");
+				case TOPLEVEL -> throw new IllegalArgumentException("TOPLEVEL can't be nested");
+			};
 		}
 	}
 
 	/// Representation of a [Declaration] used in the 3rd level of the tree. Shown as its name with additional info.
-	@RequiredArgsConstructor
-	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-	final class IncludeKindDeclaration implements Displayable {
-
-		Declaration declaration;
-
-		@Getter
-		@Setter
-		@Accessors(fluent = true)
-		@NonFinal
-		ObservableBooleanValue included;
+	record IncludeKindDeclaration(Declaration declaration) implements Displayable {
 
 		@Override
 		public String simple() {
