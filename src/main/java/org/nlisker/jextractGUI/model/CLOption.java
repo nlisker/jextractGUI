@@ -144,7 +144,7 @@ public enum CLOption {
 
 			If a header includes other headers, like '#include <header.h>', their paths will need to be provided. Clang searches \
 			some platform-specific directories automatically, like the includes folders of Visual Studio and Windows Kits on \
-			Windows. If the included headers are not found there, notification will be shown saying that the header couldn't be \
+			Windows. If the included headers are not found there, a notification will be shown saying that the header couldn't be \
 			found, but the passed header will still be added to the headers list. Then add the directories containing the included \
 			headers to the Includes list and click on the "Reload header" (⟳) button of that header. The "Show error" (⚠) button \
 			will re-show the notification of the missing header.
