@@ -26,7 +26,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
 import org.nlisker.jextractGUI.model.CLOption;
-import org.nlisker.jextractGUI.model.Displayable.Header;
+import org.nlisker.jextractGUI.model.Displayable.MainHeader;
 
 /// Viewer and controls for the *libraries* files.
 final class LibrariesViewer extends FileListViewer {
@@ -35,7 +35,7 @@ final class LibrariesViewer extends FileListViewer {
 
 	LibrariesViewer() {
 		String prompt = ":" + File.separator + "path" + File.separator + "lib.dll OR knownLib";
-		super("Libraries", Header::libraries, CLOption.LIBRARY_PATH, "Enter library name or path", prompt);
+		super("Libraries", MainHeader::libraries, CLOption.LIBRARY_PATH, "Enter library name or path", prompt);
 
 		setTop(createUseSystemLoadControls());
 	}
@@ -48,7 +48,7 @@ final class LibrariesViewer extends FileListViewer {
 		var useSystemCheckBox = new CheckBox("Use System to load libraries");
 		useSystemCheckBox.disableProperty().bind(symbolsViewer.notFocused());
 		symbolsViewer.notFocused().subscribe(noFocus -> { if (noFocus) useSystemCheckBox.setSelected(false); });
-		ControlUtils.bindFocusedHeader(useSystemCheckBox.selectedProperty(), Header::useSystemLoadLibraries);
+		ControlUtils.bindFocusedHeader(useSystemCheckBox.selectedProperty(), MainHeader::useSystemLoadLibraries);
 
 		return ControlUtils.createControls(helpButton, useSystemCheckBox);
 	}

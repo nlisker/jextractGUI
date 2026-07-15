@@ -34,7 +34,7 @@ import lombok.experimental.FieldDefaults;
 
 import org.nlisker.jextractGUI.model.CLOption;
 import org.nlisker.jextractGUI.model.Macro;
-import org.nlisker.jextractGUI.model.Displayable.Header;
+import org.nlisker.jextractGUI.model.Displayable.MainHeader;
 
 /// Viewer and controls for the *macros*.
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -63,7 +63,7 @@ final class MacroViewer extends BorderPane implements TextInput<Macro> {
 	}
 
 	private void configureTable() {
-		table.itemsProperty().bind(symbolsViewer.focusedHeader().map(Header::macros));
+		table.itemsProperty().bind(symbolsViewer.focusedHeader().map(MainHeader::macros));
 		table.disableProperty().bind(symbolsViewer.notFocused());
 		table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		table.setEditable(true);

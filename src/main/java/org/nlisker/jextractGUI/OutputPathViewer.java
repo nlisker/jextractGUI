@@ -25,7 +25,7 @@ import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
 
 import org.nlisker.jextractGUI.model.CLOption;
-import org.nlisker.jextractGUI.model.Displayable.Header;
+import org.nlisker.jextractGUI.model.Displayable.MainHeader;
 
 /// Viewer and controls for the source files generation.
 final class OutputPathViewer extends BorderPane {
@@ -42,7 +42,7 @@ final class OutputPathViewer extends BorderPane {
 		var symbolsViewer = SymbolsViewer.get();
 
 		String prompt = File.separator + "src" + File.separator + "main" + File.separator + "java";
-		var textField = ControlUtils.createBoundTextField("Enter output path", prompt, 30, Header::outputPath);
+		var textField = ControlUtils.createBoundTextField("Enter output path", prompt, 30, MainHeader::outputPath);
 
 		var selectButton = ControlUtils.createSelectButton("Select output path");
 		selectButton.disableProperty().bind(symbolsViewer.notFocused());

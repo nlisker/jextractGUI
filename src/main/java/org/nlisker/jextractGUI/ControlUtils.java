@@ -55,7 +55,7 @@ import org.kordamp.ikonli.materialdesign2.MaterialDesignH;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignK;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignM;
 import org.nlisker.jextractGUI.model.CLOption;
-import org.nlisker.jextractGUI.model.Displayable.Header;
+import org.nlisker.jextractGUI.model.Displayable.MainHeader;
 
 /**
  * Utility class for creating common controls.
@@ -129,7 +129,7 @@ class ControlUtils {
 		return controls;
 	}
 
-	TextField createBoundTextField(String tooltipText, String prompt, int colCount, Function<Header, StringProperty> headerProperty) {
+	TextField createBoundTextField(String tooltipText, String prompt, int colCount, Function<MainHeader, StringProperty> headerProperty) {
 		var textField = createTextField(tooltipText, prompt, colCount);
 		textField.disableProperty().bind(SymbolsViewer.get().notFocused());
 		SymbolsViewer.get().notFocused().subscribe(noFocus -> { if (noFocus) textField.clear(); });
@@ -145,7 +145,7 @@ class ControlUtils {
 		return textField;
 	}
 
-	<U> void bindFocusedHeader(Property<U> uiProperty, Function<Header, ? extends Property<U>> headerProperty) {
+	<U> void bindFocusedHeader(Property<U> uiProperty, Function<MainHeader, ? extends Property<U>> headerProperty) {
 		SymbolsViewer.get().focusedHeader().subscribe((oldHeader, newHeader) -> {
 			Optional.ofNullable(oldHeader).map(headerProperty::apply).ifPresent(uiProperty::unbindBidirectional);
 			Optional.ofNullable(newHeader).map(headerProperty::apply).ifPresent(uiProperty::bindBidirectional);

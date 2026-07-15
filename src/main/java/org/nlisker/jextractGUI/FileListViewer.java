@@ -36,7 +36,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
 import org.nlisker.jextractGUI.model.CLOption;
-import org.nlisker.jextractGUI.model.Displayable.Header;
+import org.nlisker.jextractGUI.model.Displayable.MainHeader;
 
 /// Parent class of viewers and controls for file lists.
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -46,13 +46,13 @@ abstract class FileListViewer extends BorderPane implements TextInput<File>, Fil
 
 	ListView<File> listView = new ListView<>();
 
-	protected FileListViewer(String titleText, Function<Header, ObservableList<File>> property, CLOption option,
+	protected FileListViewer(String titleText, Function<MainHeader, ObservableList<File>> property, CLOption option,
 			String tooltipText, String promptText) {
 		configureList(property);
 		createControls(titleText, option, tooltipText, promptText);
 	}
 
-	private void configureList(Function<Header, ObservableList<File>> property) {
+	private void configureList(Function<MainHeader, ObservableList<File>> property) {
 		listView.itemsProperty().bind(symbolsViewer.focusedHeader().map(property::apply));
 		listView.disableProperty().bind(symbolsViewer.notFocused());
 		listView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);

@@ -67,7 +67,7 @@ public sealed interface Displayable {
 	@RequiredArgsConstructor
 	@EqualsAndHashCode(of = "path")
 	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-	final class Header implements Displayable {
+	final class MainHeader implements Displayable {
 
 		/// The header file.
 		Path path;
@@ -130,6 +130,24 @@ public sealed interface Displayable {
 			}
 
 			return args;
+		}
+	}
+
+	record Header(Path path) implements Displayable {
+
+		@Override
+		public String simple() {
+			return path.getFileName().toString();
+		}
+
+		@Override
+		public String detailed() {
+			return path.toString();
+		}
+
+		@Override
+		public String asOption() {
+			return "";
 		}
 	}
 

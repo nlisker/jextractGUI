@@ -27,13 +27,13 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 
 import org.nlisker.jextractGUI.model.CLOption;
-import org.nlisker.jextractGUI.model.Displayable.Header;
+import org.nlisker.jextractGUI.model.Displayable.MainHeader;
 
 /// Viewer and controls for the package and class names generation.
 sealed abstract class NameViewer extends BorderPane {
 
 	protected NameViewer(CLOption option, String name, String tooltipText, String prompt, int colCount,
-			Function<Header, StringProperty> property, Predicate<String> validity) {
+			Function<MainHeader, StringProperty> property, Predicate<String> validity) {
 		var helpButton = ControlUtils.createHelpButton(option);
 		var label = new Label(name);
 
@@ -47,7 +47,7 @@ sealed abstract class NameViewer extends BorderPane {
 	static final class ClassNameViewer extends NameViewer {
 
 		ClassNameViewer() {
-			super(CLOption.CLASS_NAME, "Class name", "Enter class name", "MyHeader", 15, Header::className,
+			super(CLOption.CLASS_NAME, "Class name", "Enter class name", "MyHeader", 15, MainHeader::className,
 					className -> (SourceVersion.isIdentifier(className) && !SourceVersion.isKeyword(className)) || "".equals(className));
 		}
 	}
@@ -55,7 +55,7 @@ sealed abstract class NameViewer extends BorderPane {
 	static final class PackageNameViewer extends NameViewer {
 
 		PackageNameViewer() {
-			super(CLOption.PACKAGE_NAME, "Target package", "Enter package name", "com.example.native", 25, Header::packageName,
+			super(CLOption.PACKAGE_NAME, "Target package", "Enter package name", "com.example.native", 25, MainHeader::packageName,
 					packageName -> SourceVersion.isName(packageName) || "".equals(packageName) || packageName.endsWith("."));
 		}
 	}

@@ -18,7 +18,6 @@ package org.nlisker.jextractGUI;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -74,7 +73,7 @@ import org.nlisker.jextractGUI.jextract.Extractor;
 import org.nlisker.jextractGUI.jextract.Parser;
 import org.nlisker.jextractGUI.model.CLOption;
 import org.nlisker.jextractGUI.model.Displayable;
-import org.nlisker.jextractGUI.model.Displayable.Header;
+import org.nlisker.jextractGUI.model.Displayable.MainHeader;
 
 /// Viewer and controls for the header files and their content (*symbols*).
 @Accessors(fluent = true)
@@ -90,27 +89,27 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 	private static final List<String> EXTENTIONS = List.of(".h", ".c");
 
-	TreeView<Displayable> tree = new TreeView<>(new CheckBoxTreeItem<>());
+	TreeView<Displayable> tree = new TreeView<>(new TreeItem<>());
 	ObservableList<Task<Void>> runningTasks = FXCollections.observableArrayList();
 	BooleanProperty detailed;
 	BooleanBinding noItems = isEmpty();
 
 	@Getter(value = AccessLevel.PACKAGE)
-	ObjectProperty<Header> focusedHeader = new SimpleObjectProperty<>();
+	ObjectProperty<MainHeader> focusedHeader = new SimpleObjectProperty<>();
 
 	@Getter(value = AccessLevel.PACKAGE)
 	BooleanBinding notFocused = focusedHeader.isNull();
 
-	private CheckBoxTreeItem<Displayable> root() {
-		return (CheckBoxTreeItem<Displayable>) tree.getRoot();
+	private ObservableList<TreeItem<Displayable>> mainHeaders() {
+		return tree.getRoot().getChildren();
 	}
 
 	private SymbolsViewer() {
-		ObservableValue<Header> parentHeader = selectedItem().map(item -> {
-			while (!(item.getValue() instanceof Header header)) {
+		ObservableValue<MainHeader> parentHeader = selectedItem().map(item -> {
+			while (!(item.getValue() instanceof MainHeader mainHeader)) {
 				item = item.getParent();
 			}
-			return header;
+			return mainHeader;
 		});
 		// focus/selection doesn't update on deletion https://bugs.openjdk.org/browse/JDK-8248217
 		// so need to explicitly null the selection when there are no items after deletion
@@ -140,11 +139,11 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 		var runAllButton = ControlUtils.createButton(MaterialDesignA.ANIMATION_PLAY, Color.GREEN, "Generate bindings for all headers");
 		runAllButton.disableProperty().bind(noItems);
-		runAllButton.setOnAction(_ -> Extractor.runCommands(root().getChildren()));
+		runAllButton.setOnAction(_ -> Extractor.runCommands(mainHeaders()));
 
 		var writeAllButton = ControlUtils.createButton(MaterialDesignP.PENCIL_BOX_MULTIPLE, Color.DARKBLUE, "Print command for all headers");
 		writeAllButton.disableProperty().bind(noItems);
-		writeAllButton.setOnAction(_ -> MainView.get().console.setText(Extractor.createCommands(root().getChildren())));
+		writeAllButton.setOnAction(_ -> MainView.get().console.setText(Extractor.createCommands(mainHeaders())));
 
 		var progressIndicator = ControlUtils.createProgressIndicator(Bindings.isNotEmpty(runningTasks));
 
@@ -163,7 +162,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		selectButton.setOnAction(_ -> addValidFiles());
 
 		var removeButton = ControlUtils.createRemoveButton();
-		ObservableValue<Boolean> isSelectedHeader = selectedItem().map(item -> !(item.getValue() instanceof Header));
+		ObservableValue<Boolean> isSelectedHeader = selectedItem().map(item -> !(item.getValue() instanceof MainHeader));
 		removeButton.disableProperty().bind(selectedItem().isNull().or(BooleanExpression.booleanExpression(isSelectedHeader)));
 		removeButton.setOnAction(_ -> {
 			var alert = new Alert(AlertType.CONFIRMATION);
@@ -201,7 +200,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 	private Button createCollapseExpandButton(boolean expand) {
 		Ikon icon = expand ? MaterialDesignE.EXPAND_ALL : MaterialDesignC.COLLAPSE_ALL;
 		var button = ControlUtils.createButton(icon, Color.DARKBLUE, (expand ? "Expand" : "Collapse") + " all");
-		button.setOnAction(_ -> root().getChildren().forEach(typeItem -> {
+		button.setOnAction(_ -> mainHeaders().forEach(typeItem -> {
 			typeItem.setExpanded(expand);
 			typeItem.getChildren().forEach(symbolItem -> symbolItem.setExpanded(expand));
 		}));
@@ -210,7 +209,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 	@Override
 	public ObservableList<TreeItem<Displayable>> items() {
-		return root().getChildren();
+		return mainHeaders();
 	}
 
 	@Override
@@ -234,7 +233,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		return Optional.of(text)
 				.map(Path::of)
 				.filter(SymbolsViewer::isValidFile)
-				.map(this::createHeaderItem);
+				.map(this::createMainHeaderItem);
 	}
 
 	@Override
@@ -250,22 +249,22 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 	@Override
 	public CheckBoxTreeItem<Displayable> parseSelectedFile(File file) {
-		return createHeaderItem(file.toPath());
+		return createMainHeaderItem(file.toPath());
 	}
 
 	@Override
 	public Optional<CheckBoxTreeItem<Displayable>> parseDnDPath(Path path) {
 		return Optional.of(path)
 				.filter(SymbolsViewer::isValidFile)
-				.map(this::createHeaderItem);
+				.map(this::createMainHeaderItem);
 	}
 
 	private static boolean isValidFile(Path path) {
 		return Files.isRegularFile(path) && EXTENTIONS.stream().anyMatch(path.toString()::endsWith);
 	}
 
-	private CheckBoxTreeItem<Displayable> createHeaderItem(Path headerPath) {
-		return new CheckBoxTreeItem<>(new Header(headerPath));
+	private CheckBoxTreeItem<Displayable> createMainHeaderItem(Path headerPath) {
+		return new CheckBoxTreeItem<>(new MainHeader(headerPath));
 	}
 
 
@@ -276,15 +275,17 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 			@Override
 			protected Void call() throws Exception {
 				var cbMainHeaderItem = (CheckBoxTreeItem<Displayable>) mainHeaderItem;
-				Collection<CheckBoxTreeItem<Displayable>> headerItems = Parser.createHeaderItems(cbMainHeaderItem);
-				for (var headerItem : headerItems) {
-					if (headerItem.getValue().equals(mainHeaderItem.getValue())) {
+				Parser.populateHeaderItem(cbMainHeaderItem);
+				for (var headerItem : cbMainHeaderItem.getChildren()) {
+					var cbHeaderItem = (CheckBoxTreeItem<Displayable>) headerItem;
+					if (headerItem.getValue().detailed().equals(mainHeaderItem.getValue().detailed())) {
 						headerItem.setExpanded(true);
-						headerItem.setSelected(true);
+						cbHeaderItem.setSelected(true);
 					}
-					addOperationsButtonsForHeader(headerItem);
-					addHeaderItem(headerItem);
 				}
+				cbMainHeaderItem.setExpanded(true);
+				addOperationsButtonsForHeader(cbMainHeaderItem);
+				addHeaderItem(cbMainHeaderItem);
 				return null;
 			}
 		};
@@ -308,27 +309,29 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		thread.start();
 	}
 
-	private void addOperationsButtonsForHeader(CheckBoxTreeItem<Displayable> headerItem) {
-		BooleanBinding notSelected = (headerItem.selectedProperty().or(headerItem.indeterminateProperty())).not();
+	private void addOperationsButtonsForHeader(CheckBoxTreeItem<Displayable> mainHeaderItem) {
+		BooleanBinding notSelected = (mainHeaderItem.selectedProperty().or(mainHeaderItem.indeterminateProperty())).not();
 
 		var runButton = ControlUtils.createButton(MaterialDesignP.PLAY_BOX, Color.GREEN, "Generate bindings");
 		runButton.disableProperty().bind(notSelected);
-		runButton.setOnAction(_ -> Extractor.runCommand(headerItem));
+		runButton.setOnAction(_ -> Extractor.runCommand(mainHeaderItem));
 
 		var writeButton = ControlUtils.createButton(MaterialDesignP.PENCIL_BOX, Color.DARKBLUE, "Print command");
 		writeButton.disableProperty().bind(notSelected);
-		writeButton.setOnAction(_ -> MainView.get().console.setText(Extractor.createCommand(headerItem)));
+		writeButton.setOnAction(_ -> MainView.get().console.setText(Extractor.createCommand(mainHeaderItem)));
 
 		var buttons = new HBox(5, runButton, writeButton);
 		buttons.setPadding(new Insets(0, 0, 0, 5));
-		headerItem.setGraphic(buttons);
+		mainHeaderItem.setGraphic(buttons);
 	}
 
-	private void addHeaderItem(CheckBoxTreeItem<Displayable> headerItem) {
+	private void addHeaderItem(CheckBoxTreeItem<Displayable> mainHeaderItem) {
 		Platform.runLater(() -> {
-			root().getChildren().add(headerItem);
+			mainHeaders().add(mainHeaderItem);
+			// select the new header to show its controls to avoid clearing text fields of the currently selected header
+			tree.getSelectionModel().select(mainHeaderItem);
 			tree.getSelectionModel().clearSelection();
-			tree.getSelectionModel().select(headerItem);
+			tree.getSelectionModel().select(mainHeaderItem);
 		});
 	}
 

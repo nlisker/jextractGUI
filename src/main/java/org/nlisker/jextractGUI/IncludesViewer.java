@@ -23,14 +23,14 @@ import java.util.Optional;
 import javafx.stage.DirectoryChooser;
 
 import org.nlisker.jextractGUI.model.CLOption;
-import org.nlisker.jextractGUI.model.Displayable.Header;
+import org.nlisker.jextractGUI.model.Displayable.MainHeader;
 
 /// Viewer and controls for the *includes* directories.
 final class IncludesViewer extends FileListViewer {
 
 	IncludesViewer() {
 		String prompt = File.separator + "project" + File.separator + "include";
-		super("Includes", Header::includes, CLOption.INCLUDES_PATH, "Enter include path", prompt);
+		super("Includes", MainHeader::includes, CLOption.INCLUDES_PATH, "Enter include path", prompt);
 	}
 
 	@Override
