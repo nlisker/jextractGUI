@@ -40,7 +40,7 @@ ext {
 	ikonliVersion = "12.4.0";
 
 	// test
-	junitVersion = "6.1.1";
+	junitVersion = "6.1.2";
 	truthVersion = "1.4.5";
 
 	gradleWrapperVersion = "9.6.1";
