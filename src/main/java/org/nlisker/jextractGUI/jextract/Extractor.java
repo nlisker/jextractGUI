@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.util.List;
 import java.util.stream.Stream;
 
+import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBoxTreeItem;
@@ -75,13 +76,13 @@ public class Extractor {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			new Alert(AlertType.ERROR, header.simple() + "\n" + e.getMessage(), ButtonType.OK).show();
+			Platform.runLater(() -> new Alert(AlertType.ERROR, header.simple() + "\n" + e.getMessage(), ButtonType.OK).show());
 		} finally {
 			System.setErr(oldErrorStream);
 		}
-		String output = header.outputPath().get();
-		output = output.isBlank() ? "current directory" : output;
-		new Alert(AlertType.INFORMATION, "Generated bindings at " + output + ".", ButtonType.OK).show();
+		String outputPath = header.outputPath().get();
+		String output = outputPath.isBlank() ? "current directory" : outputPath;
+		Platform.runLater(() -> new Alert(AlertType.INFORMATION, "Generated bindings at " + output + ".", ButtonType.OK).show());
 	}
 
 	private List<String> createCommandArgs(CheckBoxTreeItem<Displayable> mainHeaderItem) {
