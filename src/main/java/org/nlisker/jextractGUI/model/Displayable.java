@@ -22,6 +22,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -133,6 +135,7 @@ public sealed interface Displayable {
 		}
 	}
 
+	/// Representation of a header used in the 2nd level of the tree. Shown as its file path.
 	record Header(Path path) implements Displayable {
 
 		@Override
@@ -151,7 +154,7 @@ public sealed interface Displayable {
 		}
 	}
 
-	/// Valid types to use for the `--include-[function,constant,struct,union,typedef,var]` option. Used in the 2nd level of the
+	/// Valid types to use for the `--include-[function,constant,struct,union,typedef,var]` option. Used in the 3rd level of the
 	/// tree. Shown as its name and number of leaves.
 	public enum IncludeKind implements Displayable {
 
@@ -161,6 +164,7 @@ public sealed interface Displayable {
 		TYPEDEF,
 		STRUCT,
 		UNION,
+		// Includes bitfield
 		VAR;
 
 		@Override
@@ -188,7 +192,6 @@ public sealed interface Displayable {
 				case Declaration.Typedef _ -> TYPEDEF;
 				case Declaration.Variable _ -> VAR;
 				case Declaration.Constant _ -> CONSTANT;
-//				case Declaration.Bitfield _ -> ?; // supported?
 				case Declaration.Scoped scoped -> fromScoped(scoped);
 				default -> throw new IllegalArgumentException("Unsupported Declaration: " + decl.toString());
 			};
@@ -205,8 +208,8 @@ public sealed interface Displayable {
 		}
 	}
 
-	/// Representation of a [Declaration] used in the 3rd level of the tree. Shown as its name with additional info.
-	record IncludeKindDeclaration(Declaration declaration) implements Displayable {
+	/// Representation of a [Declaration] used in the 4th level of the tree. Shown as its name with additional info.
+	record IncludeDeclaration(Declaration declaration) implements Displayable {
 
 		@Override
 		public String simple() {
@@ -239,15 +242,27 @@ public sealed interface Displayable {
 				case Declaration.Function f -> f.type().returnType() + " " + f.name() + f.parameters().stream()
 						.map(v -> v.type() + " " + v.name())
 						.collect(joining(", ", "(", ")"));
-				case Declaration.Constant c -> c.type() + " " + c.name() + " = " + c.value();
-				case Declaration.Variable v -> v.type() + " " + v.name();
+				case Declaration.Constant c -> addEnumInfo() + c.type() + " " + c.name() + " = " + c.value();
+				case Declaration.Variable v -> v.kind() + " " + v.type() + " " + v.name();
 				case Declaration.Typedef t -> t.name() + " " + t.type();
 				case Declaration.Scoped s -> s.kind() + " " + s.name() + s.members().stream()
-						.map(IncludeKindDeclaration::new)
-						.map(IncludeKindDeclaration::detailedWithoutLocation)
+						.map(IncludeDeclaration::new)
+						.map(IncludeDeclaration::detailedWithoutLocation)
 						.collect(joining(", ", " { ", " }"));
 				default -> throw new IllegalStateException("Cannot get here!");
 			};
+		}
+
+		private static final Pattern ENUM_PATTERN = Pattern.compile("(enum .*)\\.");
+
+		private String addEnumInfo() {
+			for (var att : declaration.attributes()) {
+				Matcher matcher = ENUM_PATTERN.matcher(att.toString());
+				if (matcher.find()) {
+					return matcher.group(1) + " ";
+				}
+			}
+			return "";
 		}
 
 		@Override

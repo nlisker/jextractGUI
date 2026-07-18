@@ -18,7 +18,7 @@ import lombok.experimental.UtilityClass;
 import org.nlisker.jextractGUI.model.Displayable;
 import org.nlisker.jextractGUI.model.Displayable.Header;
 import org.nlisker.jextractGUI.model.Displayable.IncludeKind;
-import org.nlisker.jextractGUI.model.Displayable.IncludeKindDeclaration;
+import org.nlisker.jextractGUI.model.Displayable.IncludeDeclaration;
 import org.nlisker.jextractGUI.model.Displayable.MainHeader;
 import org.openjdk.jextract.Declaration;
 import org.openjdk.jextract.Declaration.Scoped;
@@ -59,10 +59,19 @@ public class Parser {
 				return kindGroupItem;
 			});
 
-			var includeKindDeclaration = new IncludeKindDeclaration(decl);
-			var declItem = new CheckBoxTreeItem<Displayable>(includeKindDeclaration);
-			groupItem.getChildren().add(declItem);
+			if (decl instanceof Declaration.Scoped scoped && scoped.kind() == Declaration.Scoped.Kind.ENUM) {
+				// unlike other scoped declarations, enum declarations' members are symbols and not the enum itself
+				scoped.members().forEach(enumConst -> addDeclaration(enumConst, groupItem));
+			} else {
+				addDeclaration(decl, groupItem);
+			}
 		});
+	}
+
+	private void addDeclaration(Declaration decl, CheckBoxTreeItem<Displayable> groupItem) {
+		var includeDeclaration = new IncludeDeclaration(decl);
+		var declItem = new CheckBoxTreeItem<Displayable>(includeDeclaration);
+		groupItem.getChildren().add(declItem);
 	}
 
 	/// Parses the header and populates its symbols.
