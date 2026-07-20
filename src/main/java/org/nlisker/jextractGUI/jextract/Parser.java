@@ -1,7 +1,5 @@
 package org.nlisker.jextractGUI.jextract;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -15,10 +13,11 @@ import javafx.scene.control.CheckBoxTreeItem;
 
 import lombok.experimental.UtilityClass;
 
+import org.nlisker.jextractGUI.model.CLOption;
 import org.nlisker.jextractGUI.model.Displayable;
 import org.nlisker.jextractGUI.model.Displayable.Header;
-import org.nlisker.jextractGUI.model.Displayable.IncludeKind;
 import org.nlisker.jextractGUI.model.Displayable.IncludeDeclaration;
+import org.nlisker.jextractGUI.model.Displayable.IncludeKind;
 import org.nlisker.jextractGUI.model.Displayable.MainHeader;
 import org.openjdk.jextract.Declaration;
 import org.openjdk.jextract.Declaration.Scoped;
@@ -59,8 +58,8 @@ public class Parser {
 				return kindGroupItem;
 			});
 
+			// unlike other scoped declarations, enum declarations' members are symbols and not the enum itself
 			if (decl instanceof Declaration.Scoped scoped && scoped.kind() == Declaration.Scoped.Kind.ENUM) {
-				// unlike other scoped declarations, enum declarations' members are symbols and not the enum itself
 				scoped.members().forEach(enumConst -> addDeclaration(enumConst, groupItem));
 			} else {
 				addDeclaration(decl, groupItem);
@@ -76,26 +75,17 @@ public class Parser {
 
 	/// Parses the header and populates its symbols.
 	private List<Declaration> parse(MainHeader header) throws Exception {
-		PrintStream oldErrorStream = System.err;
-		try (var byteStream = new ByteArrayOutputStream();
-				var newErrorStream = new PrintStream(byteStream)) {
-			System.setErr(newErrorStream);
+		String[] includes = header.includes().stream()
+				.flatMap(include -> List.of(CLOption.INCLUDES_PATH.commands().getLast(), include.toString()).stream())
+				.toArray(String[]::new);
 
-			Scoped headerScope = JextractTool.parse(List.of(header.path().toString()));
-
-			System.err.flush();
-			String errorMessage = byteStream.toString();
-			if (!errorMessage.isBlank()) {
-				throw new Exception(errorMessage);
-			}
-
+		try {
+			Scoped headerScope = JextractTool.parse(List.of(header.path().toString()), includes);
 			return headerScope.members();
 		} catch (Exception e) {
 			e.printStackTrace();
 			Platform.runLater(() -> new Alert(AlertType.ERROR, header.simple() + "\n" + e.getMessage(), ButtonType.OK).show());
 			throw e;
-		} finally {
-			System.setErr(oldErrorStream);
 		}
 	}
 }

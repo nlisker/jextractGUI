@@ -40,14 +40,14 @@ public class Extractor {
 		streamRelevantHeaders(mainHeaderItems).forEach(Extractor::runCommand);
 	}
 
-	private Stream<CheckBoxTreeItem<Displayable>> streamRelevantHeaders(List<TreeItem<Displayable>> headerItems) {
-		return headerItems.stream()
+	private Stream<CheckBoxTreeItem<Displayable>> streamRelevantHeaders(List<TreeItem<Displayable>> mainHeaderItems) {
+		return mainHeaderItems.stream()
 				.<CheckBoxTreeItem<Displayable>>map(CheckBoxTreeItem.class::cast)
 				.filter(Extractor::isHeaderTreeItemRelevant);
 	}
 
-	private boolean isHeaderTreeItemRelevant(CheckBoxTreeItem<Displayable> headerItem) {
-		return headerItem.isSelected() || headerItem.isIndeterminate();
+	private boolean isHeaderTreeItemRelevant(CheckBoxTreeItem<Displayable> mainHeaderItem) {
+		return mainHeaderItem.isSelected() || mainHeaderItem.isIndeterminate();
 	}
 
 	/// Creates the jextract command as text, ready to be passed to it. Spaced segments are wrapped in quotes.
@@ -62,27 +62,39 @@ public class Extractor {
 		var header = (MainHeader) mainHeaderItem.getValue();
 		List<String> commandArgs = createCommandArgs(mainHeaderItem);
 
-		PrintStream oldErrorStream = System.err;
-		try (var byteStream = new ByteArrayOutputStream();
-				var newErrorStream = new PrintStream(byteStream)) {
-			System.setErr(newErrorStream);
+		var errorBuffer = new ByteArrayOutputStream();
+		var errorStream = new PrintStream(errorBuffer);
 
-			JEXTRACT.run(System.out, System.err, commandArgs.toArray(new String[0]));
-
-			System.err.flush();
-			var errorMessage = byteStream.toString();
-			if (!errorMessage.isBlank()) {
-				throw new Exception(errorMessage);
-			}
+		try {
+			JEXTRACT.run(System.out, errorStream, commandArgs.toArray(new String[0]));
 		} catch (Exception e) {
 			e.printStackTrace();
-			Platform.runLater(() -> new Alert(AlertType.ERROR, header.simple() + "\n" + e.getMessage(), ButtonType.OK).show());
-		} finally {
-			System.setErr(oldErrorStream);
+			return;
 		}
+
+		errorStream.flush();
+		var errorMessage = errorBuffer.toString();
+		System.err.append(errorMessage);
+	    try {
+	        parseErrorStream(errorMessage);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return;
+	    }
+
 		String outputPath = header.outputPath().get();
 		String output = outputPath.isBlank() ? "current directory" : outputPath;
 		Platform.runLater(() -> new Alert(AlertType.INFORMATION, "Generated bindings at " + output + ".", ButtonType.OK).show());
+	}
+
+	private void parseErrorStream(String stream) throws Exception {
+		if (stream.contains("error")) {
+			Platform.runLater(() -> new Alert(AlertType.ERROR, stream, ButtonType.OK).show());
+			throw new Exception(stream);
+		}
+		if (stream.contains("warning")) {
+			Platform.runLater(() -> new Alert(AlertType.WARNING, stream, ButtonType.OK).show());
+		}
 	}
 
 	private List<String> createCommandArgs(CheckBoxTreeItem<Displayable> mainHeaderItem) {

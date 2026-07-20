@@ -107,7 +107,6 @@ class ControlUtils {
 
 	private Button createButton(Ikon icon, int size, Color color, String tooltipText) {
 		var symbol = FontIcon.of(icon, size, color);
-//		symbol.setBoundsType(TextBoundsType.VISUAL);
 		var button = new Button("", symbol);
 		button.setPadding(new Insets(0));
 		button.setTooltip(new Tooltip(tooltipText));

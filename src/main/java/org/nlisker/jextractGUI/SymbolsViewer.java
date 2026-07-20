@@ -21,7 +21,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.BooleanExpression;
@@ -68,6 +67,7 @@ import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignA;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignE;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignM;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignP;
 import org.nlisker.jextractGUI.jextract.Extractor;
 import org.nlisker.jextractGUI.jextract.Parser;
@@ -86,6 +86,9 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 	static SymbolsViewer get() {
 		return INSTANCE = INSTANCE == null ? new SymbolsViewer() : INSTANCE;
 	}
+
+	private static final Color EXEC_COLOR =  Color.GREEN;
+	private static final Color CONF_COLOR =  Color.DARKBLUE;
 
 	private static final List<String> EXTENTIONS = List.of(".h", ".c");
 
@@ -137,11 +140,11 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		var expandButton = createCollapseExpandButton(true);
 		var collapseButton = createCollapseExpandButton(false);
 
-		var runAllButton = ControlUtils.createButton(MaterialDesignA.ANIMATION_PLAY, Color.GREEN, "Generate bindings for all headers");
+		var runAllButton = ControlUtils.createButton(MaterialDesignA.ANIMATION_PLAY, EXEC_COLOR, "Generate bindings for all headers");
 		runAllButton.disableProperty().bind(noItems);
 		runAllButton.setOnAction(_ -> Extractor.runCommands(mainHeaders()));
 
-		var writeAllButton = ControlUtils.createButton(MaterialDesignP.PENCIL_BOX_MULTIPLE, Color.DARKBLUE, "Print command for all headers");
+		var writeAllButton = ControlUtils.createButton(MaterialDesignP.PENCIL_BOX_MULTIPLE, CONF_COLOR, "Print command for all headers");
 		writeAllButton.disableProperty().bind(noItems);
 		writeAllButton.setOnAction(_ -> MainView.get().console.setText(Extractor.createCommands(mainHeaders())));
 
@@ -199,7 +202,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 	private Button createCollapseExpandButton(boolean expand) {
 		Ikon icon = expand ? MaterialDesignE.EXPAND_ALL : MaterialDesignC.COLLAPSE_ALL;
-		var button = ControlUtils.createButton(icon, Color.DARKBLUE, (expand ? "Expand" : "Collapse") + " all");
+		var button = ControlUtils.createButton(icon, CONF_COLOR, (expand ? "Expand" : "Collapse") + " all");
 		button.setOnAction(_ -> mainHeaders().forEach(typeItem -> {
 			typeItem.setExpanded(expand);
 			typeItem.getChildren().forEach(symbolItem -> symbolItem.setExpanded(expand));
@@ -270,6 +273,25 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 	@Override
 	public void add(TreeItem<Displayable> mainHeaderItem) {
+		var parseButton = ControlUtils.createButton(MaterialDesignM.MAGNIFY, CONF_COLOR, "Parse header");
+		parseButton.setOnAction(_ -> parse(mainHeaderItem));
+
+		var container = new HBox(parseButton);
+		container.setPadding(new Insets(0, 0, 0, 5));
+		mainHeaderItem.setGraphic(container);
+
+		addHeaderItem(mainHeaderItem);
+	}
+
+	private void addHeaderItem(TreeItem<Displayable> mainHeaderItem) {
+		mainHeaders().add(mainHeaderItem);
+		// select the new header to show its controls to avoid clearing text fields of the currently selected header
+		tree.getSelectionModel().select(mainHeaderItem);
+		tree.getSelectionModel().clearSelection();
+		tree.getSelectionModel().select(mainHeaderItem);
+	}
+
+	private void parse(TreeItem<Displayable> mainHeaderItem) {
 		var task = new Task<Void>() {
 
 			@Override
@@ -285,7 +307,6 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 				}
 				cbMainHeaderItem.setExpanded(true);
 				addOperationsButtonsForHeader(cbMainHeaderItem);
-				addHeaderItem(cbMainHeaderItem);
 				return null;
 			}
 		};
@@ -312,27 +333,17 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 	private void addOperationsButtonsForHeader(CheckBoxTreeItem<Displayable> mainHeaderItem) {
 		BooleanBinding notSelected = (mainHeaderItem.selectedProperty().or(mainHeaderItem.indeterminateProperty())).not();
 
-		var runButton = ControlUtils.createButton(MaterialDesignP.PLAY_BOX, Color.GREEN, "Generate bindings");
+		var runButton = ControlUtils.createButton(MaterialDesignP.PLAY_BOX, EXEC_COLOR, "Generate bindings");
 		runButton.disableProperty().bind(notSelected);
 		runButton.setOnAction(_ -> Extractor.runCommand(mainHeaderItem));
 
-		var writeButton = ControlUtils.createButton(MaterialDesignP.PENCIL_BOX, Color.DARKBLUE, "Print command");
+		var writeButton = ControlUtils.createButton(MaterialDesignP.PENCIL_BOX, CONF_COLOR, "Print command");
 		writeButton.disableProperty().bind(notSelected);
 		writeButton.setOnAction(_ -> MainView.get().console.setText(Extractor.createCommand(mainHeaderItem)));
 
 		var buttons = new HBox(5, runButton, writeButton);
 		buttons.setPadding(new Insets(0, 0, 0, 5));
 		mainHeaderItem.setGraphic(buttons);
-	}
-
-	private void addHeaderItem(CheckBoxTreeItem<Displayable> mainHeaderItem) {
-		Platform.runLater(() -> {
-			mainHeaders().add(mainHeaderItem);
-			// select the new header to show its controls to avoid clearing text fields of the currently selected header
-			tree.getSelectionModel().select(mainHeaderItem);
-			tree.getSelectionModel().clearSelection();
-			tree.getSelectionModel().select(mainHeaderItem);
-		});
 	}
 
 	private static class DeclarationDetailedStringConverter extends StringConverter<TreeItem<Displayable>> {
@@ -360,22 +371,4 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 			return null; // tree is not editable
 		}
 	}
-
-//	private static void executeInStreams(Runnable op) throws Exception {
-//		PrintStream oldErrorStream = System.err;
-//		try (var byteStream = new ByteArrayOutputStream();
-//			 var newErrorStream = new PrintStream(byteStream)) {
-//			System.setErr(newErrorStream);
-//
-//			op.run();
-//
-//			System.err.flush();
-//			var errorMessage = byteStream.toString();
-//			if (!errorMessage.isBlank()) {
-//				throw new Exception(errorMessage);
-//			}
-//		} finally {
-//			System.setErr(oldErrorStream);
-//		}
-//	}
 }
