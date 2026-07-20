@@ -40,10 +40,11 @@ public class Extractor {
 		streamRelevantHeaders(mainHeaderItems).forEach(Extractor::runCommand);
 	}
 
+	@SuppressWarnings("cast")
 	private Stream<CheckBoxTreeItem<Displayable>> streamRelevantHeaders(List<TreeItem<Displayable>> mainHeaderItems) {
 		return mainHeaderItems.stream()
 				.<CheckBoxTreeItem<Displayable>>map(CheckBoxTreeItem.class::cast)
-				.filter(Extractor::isHeaderTreeItemRelevant);
+				.filter(t -> isHeaderTreeItemRelevant((CheckBoxTreeItem<Displayable>) t)); //javac needs the cast
 	}
 
 	private boolean isHeaderTreeItemRelevant(CheckBoxTreeItem<Displayable> mainHeaderItem) {
