@@ -15,7 +15,6 @@
  */
 package org.nlisker.jextractGUI.model;
 
-import java.util.Objects;
 import java.util.Optional;
 
 import javafx.beans.property.SimpleStringProperty;
@@ -38,27 +37,24 @@ public class Macro {
 		this.value = new SimpleStringProperty(value);
 	}
 
+	public static Optional<Macro> fromString(String string) {
+		String[] tokens = string.split("=");
+		return tokens.length == 2 ? Optional.of(new Macro(tokens[0].strip(), tokens[1].strip())) : Optional.empty();
+	}
+
 	@Override
 	public String toString() {
 		return name.get() + "=" + value.get();
 	}
 
-	public static Optional<Macro> fromString(String string) {
-		String[] tokens = string.split("=");
-		if (tokens.length == 2) {
-			return Optional.of(new Macro(tokens[0].strip(), tokens[1].strip()));
-		}
-		return Optional.empty();
-	}
-
 	@Override
 	public int hashCode() {
-		return Objects.hash(name.get());
+		return name.get().hashCode();
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
-		return obj instanceof Macro other && Objects.equals(name.get(), other.name.get());
+		return obj instanceof Macro other && name.get().equals(other.name.get());
 	}
 }
