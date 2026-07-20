@@ -20,8 +20,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
-import javafx.beans.binding.Bindings;
+import javafx.animation.Animation;
+import javafx.animation.Interpolator;
+import javafx.animation.RotateTransition;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.BooleanProperty;
@@ -29,7 +33,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
@@ -56,6 +59,7 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.Callback;
+import javafx.util.Duration;
 import javafx.util.StringConverter;
 
 import lombok.AccessLevel;
@@ -93,9 +97,10 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 	private static final List<String> EXTENTIONS = List.of(".h", ".c");
 
 	TreeView<Displayable> tree = new TreeView<>(new TreeItem<>());
-	ObservableList<Task<Void>> runningTasks = FXCollections.observableArrayList();
 	BooleanProperty detailed;
 	BooleanBinding noItems = isEmpty();
+
+	BlockingQueue<CheckBoxTreeItem<Displayable>> parseRequests = new LinkedBlockingQueue<>();
 
 	@Getter(value = AccessLevel.PACKAGE)
 	ObjectProperty<MainHeader> focusedHeader = new SimpleObjectProperty<>();
@@ -123,6 +128,8 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 		createControl(detailedViewCB);
 		configureTree();
+
+		listenToParseReuqests();
 	}
 
 	private void createControl(CheckBox detailedViewCB) {
@@ -148,11 +155,8 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		writeAllButton.disableProperty().bind(noItems);
 		writeAllButton.setOnAction(_ -> MainView.get().console.setText(Extractor.createCommands(mainHeaders())));
 
-		var progressIndicator = ControlUtils.createProgressIndicator(Bindings.isNotEmpty(runningTasks));
-
 		HBox batchControls = ControlUtils.createControls(detailedViewCB, expandButton, collapseButton,
-				new Separator(Orientation.VERTICAL), runAllButton, writeAllButton,
-				new Separator(Orientation.VERTICAL), progressIndicator);
+				new Separator(Orientation.VERTICAL), runAllButton, writeAllButton);
 		batchControls.setPadding(new Insets(2, 0, 0, 2));
 		return batchControls;
 	}
@@ -274,13 +278,24 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 	@Override
 	public void add(TreeItem<Displayable> mainHeaderItem) {
 		var parseButton = ControlUtils.createButton(MaterialDesignM.MAGNIFY, CONF_COLOR, "Parse header");
-		parseButton.setOnAction(_ -> parse(mainHeaderItem));
+		parseButton.setOnAction(_ -> {
+			animateGraphic(parseButton);
+			parseRequests.add((CheckBoxTreeItem<Displayable>) mainHeaderItem);
+		});
 
 		var container = new HBox(parseButton);
 		container.setPadding(new Insets(0, 0, 0, 5));
 		mainHeaderItem.setGraphic(container);
 
 		addHeaderItem(mainHeaderItem);
+	}
+
+	private static void animateGraphic(Button parseButton) {
+		var rotateTransition = new RotateTransition(Duration.seconds(1), parseButton.getGraphic());
+		rotateTransition.setToAngle(360);
+		rotateTransition.setCycleCount(Animation.INDEFINITE);
+		rotateTransition.setInterpolator(Interpolator.LINEAR);
+		rotateTransition.play();
 	}
 
 	private void addHeaderItem(TreeItem<Displayable> mainHeaderItem) {
@@ -291,46 +306,38 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		tree.getSelectionModel().select(mainHeaderItem);
 	}
 
-	private void parse(TreeItem<Displayable> mainHeaderItem) {
+	private void listenToParseReuqests() {
 		var task = new Task<Void>() {
 
 			@Override
-			protected Void call() throws Exception {
-				var cbMainHeaderItem = (CheckBoxTreeItem<Displayable>) mainHeaderItem;
-				Parser.populateHeaderItem(cbMainHeaderItem);
-				for (var headerItem : cbMainHeaderItem.getChildren()) {
-					var cbHeaderItem = (CheckBoxTreeItem<Displayable>) headerItem;
-					if (headerItem.getValue().detailed().equals(mainHeaderItem.getValue().detailed())) {
-						headerItem.setExpanded(true);
-						cbHeaderItem.setSelected(true);
+			protected Void call() throws InterruptedException  {
+				while (true) {
+					CheckBoxTreeItem<Displayable> mainHeaderItem = parseRequests.take();
+					try {
+						Parser.populateHeaderItem(mainHeaderItem);
+					} catch (Exception e) {
+						e.printStackTrace();
+						continue;
 					}
+					for (var headerItem : mainHeaderItem.getChildren()) {
+						var cbHeaderItem = (CheckBoxTreeItem<Displayable>) headerItem;
+						if (headerItem.getValue().detailed().equals(mainHeaderItem.getValue().detailed())) {
+							headerItem.setExpanded(true);
+							cbHeaderItem.setSelected(true);
+						}
+					}
+					mainHeaderItem.setExpanded(true);
+					addOperationsButtonsForHeader(mainHeaderItem);
 				}
-				cbMainHeaderItem.setExpanded(true);
-				addOperationsButtonsForHeader(cbMainHeaderItem);
-				return null;
 			}
 		};
-		task.runningProperty().subscribe(running -> {
-			if (running) {
-				runningTasks.add(task);
-			} else {
-				runningTasks.remove(task);
-			}
-		});
-		task.exceptionProperty().subscribe((_, ex) -> {
-			ex.printStackTrace();
-			String message = ex.getMessage();
-			if (message != null) {
-				new Alert(AlertType.ERROR, message, ButtonType.OK).show();
-			}
-		});
 
 		var thread = new Thread(task);
 		thread.setDaemon(true);
 		thread.start();
 	}
 
-	private void addOperationsButtonsForHeader(CheckBoxTreeItem<Displayable> mainHeaderItem) {
+	private static void addOperationsButtonsForHeader(CheckBoxTreeItem<Displayable> mainHeaderItem) {
 		BooleanBinding notSelected = (mainHeaderItem.selectedProperty().or(mainHeaderItem.indeterminateProperty())).not();
 
 		var runButton = ControlUtils.createButton(MaterialDesignP.PLAY_BOX, EXEC_COLOR, "Generate bindings");
