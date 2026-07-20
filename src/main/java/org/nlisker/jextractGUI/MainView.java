@@ -65,7 +65,7 @@ class MainView extends BorderPane {
 		VBox.setVgrow(console, Priority.ALWAYS);
 	}
 
-	private Text createTitle(SymbolsViewer symbolsViewer) {
+	private static Text createTitle(SymbolsViewer symbolsViewer) {
 		Text title = ControlUtils.createTitle("");
 		title.textProperty().bind(symbolsViewer.focusedHeader().map(h -> "Options for " + h.simple()).orElse("Select a header"));
 		Paint fill = title.getFill();

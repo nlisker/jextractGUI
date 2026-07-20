@@ -128,13 +128,13 @@ interface DnDInput<T> extends InputHandler<T> {
 		target.setOnDragDropped(event -> addValidFiles(paths(event)));
 	}
 
-	private Stream<Path> paths(DragEvent event) {
+	private static Stream<Path> paths(DragEvent event) {
 		return event.getDragboard().getFiles().stream()
 				.map(File::toPath)
-				.flatMap(this::walk);
+				.flatMap(DnDInput::walk);
 	}
 
-	private Stream<Path> walk(Path path) {
+	private static Stream<Path> walk(Path path) {
 		try {
 			return Files.walk(path);
 		} catch (IOException e) {

@@ -40,7 +40,7 @@ final class LibrariesViewer extends FileListViewer {
 		setTop(createUseSystemLoadControls());
 	}
 
-	private HBox createUseSystemLoadControls() {
+	private static HBox createUseSystemLoadControls() {
 		var symbolsViewer = SymbolsViewer.get();
 
 		var helpButton = ControlUtils.createHelpButton(CLOption.USE_SYSTEM_LOAD_LIBRARIES);

@@ -38,7 +38,7 @@ final class OutputPathViewer extends BorderPane {
 		setCenter(controls);
 	}
 
-	private Pane createFolderTextControl() {
+	private static Pane createFolderTextControl() {
 		var symbolsViewer = SymbolsViewer.get();
 
 		String prompt = File.separator + "src" + File.separator + "main" + File.separator + "java";
