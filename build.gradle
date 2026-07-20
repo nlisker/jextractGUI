@@ -19,7 +19,7 @@ plugins {
 	id "org.openjfx.javafxplugin" version "0.1.0"
 	id "io.freefair.lombok" version "9.5.0"
 	id "com.google.osdetector" version "1.7.3"
-	id "org.beryx.jlink" version "4.0.2" // https://badass-jlink-plugin.beryx.org
+	id "org.beryx.jlink" version "4.1.0" // https://badass-jlink-plugin.beryx.org
 	id "de.undercouch.download" version "5.6.0"
 	id "com.github.ben-manes.versions" version "0.54.0"
 	id "eclipse"
@@ -40,7 +40,7 @@ ext {
 	ikonliVersion = "12.4.0";
 
 	// test
-	junitVersion = "6.1.1";
+	junitVersion = "6.1.2";
 	truthVersion = "1.4.5";
 
 	gradleWrapperVersion = "9.6.1";
