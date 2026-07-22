@@ -94,7 +94,4 @@ jobs:
         artifactErrorsFailBuild: true
 
     - name: Print result
-      run: |
-        files=$(basename -a "$artifact_path"/* | paste -sd ',' - | sed 's/,/, /g')
-
-        echo "Released $files to v$version"
+      run: echo "Released $artifact_name to v$version"
