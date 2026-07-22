@@ -308,7 +308,8 @@ def iconPath = switch (osdetector.os) {
 }
 jpackage {
 	icon = iconPath
-	imageOptions = ["--verbose"]
+	imageOptions = ["--verbose",
+			"--app-content", "buildResources/Resources"]
 }
 
 def jpackageImageZipTask = tasks.register("jpackageImageZip", Zip) {
@@ -317,31 +318,31 @@ def jpackageImageZipTask = tasks.register("jpackageImageZip", Zip) {
 
 	from jpackageImageTask.map { it.imageOutputDir }
 	
-	// add license files to top level
-	if (osdetector.os != "osx") {
-		from(layout.projectDirectory) {
-			include "LICENSE.txt", "NOTICE.txt"
-			into project.name
-		}
-	}
+//	// add license files to top level
+//	if (osdetector.os != "osx") {
+//		from(layout.projectDirectory) {
+//			include "LICENSE.txt", "NOTICE.txt"
+//			into project.name
+//		}
+//	}
 	archiveClassifier = osdetector.os + "-" + osdetector.arch
 }
 
-if (osdetector.os == "osx") {
-    def copyLicensesTask = tasks.register("copyLicenses", Copy) {
-        group = "build"
-        description = "Copies license files into the macOS app bundle's Resources directory"
-
-        dependsOn jpackageImageTask
-        from(layout.projectDirectory) {
-            include "LICENSE.txt", "NOTICE.txt"
-        }
-        into jpackageImageTask.map {
-            it.imageOutputDir.dir("${project.name}.app/Contents/Resources")
-        }
-    }
-    jpackageImageZipTask { dependsOn copyLicensesTask }
-}
+//if (osdetector.os == "osx") {
+//    def copyLicensesTask = tasks.register("copyLicenses", Copy) {
+//        group = "build"
+//        description = "Copies license files into the macOS app bundle's Resources directory"
+//
+//        dependsOn jpackageImageTask
+//        from(layout.projectDirectory) {
+//            include "LICENSE.txt", "NOTICE.txt"
+//        }
+//        into jpackageImageTask.map {
+//            it.imageOutputDir.dir("${project.name}.app/Contents/Resources")
+//        }
+//    }
+//    jpackageImageZipTask { dependsOn copyLicensesTask }
+//}
 
 tasks.register("printArchiveFileName") {
 	group = "help"
