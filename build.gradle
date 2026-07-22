@@ -308,9 +308,9 @@ def iconPath = switch (osdetector.os) {
 }
 jpackage {
 	icon = iconPath
-	imageOptions = ["--verbose",
-			"--app-content", "LICENSE.txt",
-			"--app-content", "NOTICE.txt"]
+	imageOptions = ["--verbose"]//,
+//			"--app-content", "LICENSE.txt",
+//			"--app-content", "NOTICE.txt"]
 }
 
 tasks.register("jpackageImageZip", Zip) {
