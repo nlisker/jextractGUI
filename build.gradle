@@ -14,6 +14,20 @@
  * limitations under the License.
  */
 
+import org.gradle.api.file.FileSystemOperations
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
+import org.gradle.jvm.toolchain.JavaLauncher
+import org.gradle.process.ExecOperations
+import javax.inject.Inject
+
 plugins {
 	id "application"
 	id "org.openjfx.javafxplugin" version "0.1.0"
@@ -28,32 +42,24 @@ plugins {
 version = "0.1.0"
 
 ext {
-	//jextract
+	// jextract
 	jxtVerJDK = "25"
-	jxtVerM = "2";
-	jxtVerB = "4";
+	jxtVerM = "2"
+	jxtVerB = "4"
 
 	// main
-	javaVersion = "26";
-	javafxVersion = "26";
-	lombokVersion = "1.18.46";
-	ikonliVersion = "12.4.0";
+	javaVersion = "26"
+	javafxVersion = "26"
+	lombokVersion = "1.18.46"
+	ikonliVersion = "12.4.0"
 
 	// test
-	junitVersion = "6.1.2";
-	truthVersion = "1.4.5";
+	junitVersion = "6.1.2"
+	truthVersion = "1.4.5"
 
-	gradleWrapperVersion = "9.6.1";
+	gradleWrapperVersion = "9.6.1"
 }
 
-dependencies {
-	implementation files("lib/jextract.jar")
-	implementation "org.kordamp.ikonli:ikonli-javafx:$ikonliVersion"
-	implementation "org.kordamp.ikonli:ikonli-materialdesign2-pack:$ikonliVersion"
-	implementation "org.kordamp.ikonli:ikonli-entypo-pack:$ikonliVersion"
-	testImplementation "org.junit.jupiter:junit-jupiter:$junitVersion"
-	testImplementation "com.google.truth:truth:$truthVersion"
-}
 
 java {
 	toolchain.languageVersion.set(JavaLanguageVersion.of(javaVersion))
@@ -64,25 +70,25 @@ lombok {
 }
 
 javafx {
-    version = javafxVersion
-    modules = [ "javafx.controls" ]
+	version = javafxVersion
+	modules = ["javafx.controls"]
 }
 
 application {
-	mainModule = "org.nlisker.jextractGUI" // name defined in module-info.java - required by application plugin with modules
-	mainClass = "org.nlisker.jextractGUI.JextractGUI" // required by application plugin always
+	mainModule = "org.nlisker.jextractGUI" // name defined in module-info.java
+	mainClass  = "org.nlisker.jextractGUI.JextractGUI"
 }
 
 test {
 	useJUnitPlatform()
 }
 
-tasks.withType(JavaExec) {
+tasks.withType(JavaExec).configureEach {
 	jvmArgs += "--enable-preview"
 	jvmArgs += "--enable-native-access=org.openjdk.jextract"
 	doFirst {
-		// Add the extracted clang to the lib path
-		def libPath = "lib;" + System.getProperty("java.library.path")
+		// Add the extracted libclang to the lib path
+		def libPath = "lib" + File.pathSeparator + System.getProperty("java.library.path")
 		systemProperty("java.library.path", libPath)
 	}
 }
@@ -98,142 +104,186 @@ eclipse.classpath {
 	// https://github.com/openjfx/javafx-gradle-plugin/issues/168
 	// https://github.com/gradle/gradle/issues/29296
 	file.whenMerged {
-		entries.find { it.getPath().contains("jextract.jar") }.each { it.entryAttributes["module"] = "true"	}
+		entries.find { it.getPath().contains("jextract.jar") }.each { it.entryAttributes["module"] = "true" }
 	}
 }
 
 
-// jextract link examples
-//https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_linux-aarch64_bin.tar.gz
-//https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_linux-x64_bin.tar.gz
-//https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_macos-aarch64_bin.tar.gz
-//https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_macos-x64_bin.tar.gz
-//https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_windows-x64_bin.tar.gz
+//// Create jextract deps ////
+// 1. download
+// 2. unzip
+// 3. extract the jar from the image
+// 4. copy the jar to 'lib'
+//
+// jextract download URL examples:
+// https://download.java.net/java/early_access/jextract/25/2/openjdk-25-jextract+2-4_linux-x64_bin.tar.gz
+// https://download.java.net/java/early_access/jextract/25/2/openjdk-25-jextract+2-4_windows-x64_bin.tar.gz
 
-var osName = osdetector.os == "osx" ? "macos" : osdetector.os;
-var osArch = osdetector.arch == "x86_64" ? "x64" : osdetector.arch;
+def osName = osdetector.os == "osx" ? "macos" : osdetector.os
+def osArch = osdetector.arch == "x86_64" ? "x64" : osdetector.arch
 
-String jxtLink = "https://download.java.net/java/early_access/jextract/${jxtVerJDK}/${jxtVerM}/";
-String jxtName = "openjdk-${jxtVerJDK}-jextract+${jxtVerM}-${jxtVerB}_${osName}-${osArch}_bin.tar.gz";
+String jxtLink = "https://download.java.net/java/early_access/jextract/${jxtVerJDK}/${jxtVerM}/"
+String jxtName = "openjdk-${jxtVerJDK}-jextract+${jxtVerM}-${jxtVerB}_${osName}-${osArch}_bin.tar.gz"
 
-var jxtDir = "jextractBinaries";
-var javaBin = ProcessHandle.current().info().command().get().replace("java.exe", "");
+def jxtDir = "jextractBinaries"
+// config-cache: create path providers from layout.buildDirectory, not from a task.
+def jxtArchive    = layout.buildDirectory.file("${jxtDir}/${jxtName}")
+def jxtExtractDir = layout.buildDirectory.dir(jxtDir)
 
-tasks.register("downloadJextractBinaries", Download) {
+def downloadTask = tasks.register("downloadJextractBinaries", Download) {
 	group = "build setup"
 	description = "Downloads the jextract binaries"
 
-    src jxtLink + jxtName
-    dest layout.buildDirectory.file("${jxtDir}/${jxtName}")
-    overwrite false
-
-//	doLast {
-//		println("Downloaded the jextract binaries")
-//	}
+	src jxtLink + jxtName
+	dest jxtArchive
+	overwrite false
 }
 
-tasks.register("unzipJextractBinaries", Copy) {
+def unzipTask = tasks.register("unzipJextractBinaries", Copy) {
 	group = "build setup"
 	description = "Unzips the required files from the binaries"
 
-	dependsOn tasks.downloadJextractBinaries
-
-	from tarTree(downloadJextractBinaries.dest).matching { include "**/modules", "**/libclang**" }
-	into layout.buildDirectory.file("${jxtDir}")
-	// Flatten
-	eachFile {
-		path = name
+	// config-cache: project.tarTree() is called at config time to avoid calling 'project' inside a lazy provider (execution time).
+	// The path 'jxtArchive' comes from a shared provider, not from downloadTask's declared output, so Gradle cannot infer the
+	// ordering - it must be declared explicitly.
+	dependsOn downloadTask
+	from tarTree(jxtArchive.get().asFile).matching {
+		include "**/modules", "**/libclang**"
 	}
+	into jxtExtractDir
+	// Flatten - drop the nested platform-specific subdir added by the archive
+	eachFile { path = name }
 	includeEmptyDirs = false
-
-//	doLast {
-//		println("Unzipped the jextract binaries")
-//	}
-}
-
-tasks.register("jimageJextract", Exec) {
-	group = "build setup"
-	description = "Extract the jextract module from the image"
-
-	dependsOn tasks.unzipJextractBinaries
-
-	workingDir unzipJextractBinaries.destinationDir
-	commandLine "${javaBin}jimage", "extract", "--include", "regex:.*jextract.*", "modules"
-
-//	doLast {
-//		println("Extracted the jextract module")
-//	}
 }
 
 /**
- * `c` creates a jar
- * `M` needed so 'jar' does not create its own manifest, overriding the existing one
- * `f` defines the filename (and dir) of the jar
- * `-C` cd's into the directory
- * `.` add all files in the directory to the jar
-*/
-tasks.register("jarJextract", Exec) {
-	group = "build setup"
-	description = "Creates the thin jextract jar"
+ * Extracts the org.openjdk.jextract module from a downloaded jimage 'modules' file and packages it into a thin jar.
+ *
+ * @CacheableTask makes repeated builds skip 'jimage'/'jar' invocations when the inputs are unchanged.
+ */
+@CacheableTask
+abstract class BuildJextractJarTask extends DefaultTask {
 
-	dependsOn tasks.jimageJextract
+	/** Input - the jimage 'modules' file to extract from. Only content matters for caching. */
+	@InputFile
+	@PathSensitive(PathSensitivity.NONE)
+	abstract RegularFileProperty getModulesFile()
 
-	workingDir unzipJextractBinaries.destinationDir
-	commandLine "${javaBin}jar", "cfM", "jextract.jar", "-C", "org.openjdk.jextract/", "."
+	/** Output - the jar file to produce. */
+	@OutputFile
+	abstract RegularFileProperty getOutputJar()
 
-//	doLast {
-//		println("Created the jextract jar")
-//	}
+	/**
+	 * The toolchain launcher used for 'jimage'/'jar' in its JDK bin directory.
+	 * The cache key uses its metadata (version, vendor), so builds with different JDKs produce distinct cache entries.
+	 */
+	@Nested
+	abstract Property<JavaLauncher> getLauncher()
+
+	@Inject abstract ExecOperations getExecOps()
+	@Inject abstract FileSystemOperations getFsOps()
+
+	@TaskAction
+	void execute() {
+		def workDir = temporaryDir
+
+		// Copy the 'modules' file into the working directory where jimage will run.
+		fsOps.copy {
+			from modulesFile
+			into workDir
+		}
+
+		// Derive 'jimage' and 'jar' executables from the configured toolchain.
+		def launcherExec = launcher.get().executablePath.asFile
+		def jdkBin = launcherExec.parentFile
+		def ext = launcherExec.name.endsWith(".exe") ? ".exe" : ""
+		def jimage = new File(jdkBin, "jimage${ext}")
+		def jar    = new File(jdkBin, "jar${ext}")
+
+		// Extract the jextract module from the image using 'jimage'.
+		execOps.exec {
+			workingDir workDir
+			commandLine jimage, "extract", "--include", "regex:.*jextract.*", "modules"
+		}
+
+		/**
+		 * Creates the jar from the extracted module using 'jar'.
+		 *
+		 * `c` creates a jar
+		 * `M` needed so 'jar' does not create its own manifest, overriding the existing one
+		 * `f` defines the filename (and dir) of the jar
+		 * `-C` cd's into the directory
+		 * `.` add all files in the directory to the jar
+		 */
+		execOps.exec {
+			workingDir workDir
+			commandLine jar, "cfM", outputJar.get().asFile.absolutePath,
+					"-C", new File(workDir, "org.openjdk.jextract"), "."
+		}
+	}
 }
 
-tasks.register("copyJextract", Copy) {
+def buildJarTask = tasks.register("buildJextractJar", BuildJextractJarTask) {
 	group = "build setup"
-	description = "Copies the required resources to the project"
+	description = "Extracts the jextract module from the jimage and packages it as a jar"
 
-	dependsOn tasks.jarJextract, tasks.unzipJextractBinaries
+	// config-cache: fileProvider wires through the TaskProvider, so the dependency on unzipTask is inferred automatically.
+	modulesFile.fileProvider(unzipTask.map { new File(it.destinationDir, "modules") })
+	outputJar = jxtExtractDir.map { it.file("jextract.jar") }
+	launcher.convention(javaToolchains.launcherFor {
+		languageVersion = JavaLanguageVersion.of(javaVersion as int)
+	})
+}
 
-	from(unzipJextractBinaries.destinationDir) {
-		include "jextract.jar"
+def copyJextractTask = tasks.register("copyJextract", Copy) {
+	group = "build setup"
+	description = "Copies the required resources to the project's 'lib' directory"
+
+	// config-cache: flatMap/map on TaskProvider infers the task dependencies on buildJarTask and unzipTask automatically.
+	from buildJarTask.flatMap { it.outputJar }
+	from(unzipTask.map { it.destinationDir }) {
 		include "libclang**"
-    }
-    into "lib"
-
-//	doLast {
-//		println("Copied the jextract resources")
-//	}
+	}
+	into "lib"
 }
 
-compileJava.dependsOn copyJextract
+/**
+ * Prepares lib/jextract.jar as a file dependency (instead of declaring it directly in dependencies).
+ * config-cache: builtBy configures the dependency on 'copyJextractTask'.
+ */
+def jextractJar = project.files("lib/jextract.jar").tap { builtBy(copyJextractTask) }
 
-tasks.register("copyClang", Copy) {
+dependencies {
+	implementation jextractJar
+	implementation "org.kordamp.ikonli:ikonli-javafx:$ikonliVersion"
+	implementation "org.kordamp.ikonli:ikonli-materialdesign2-pack:$ikonliVersion"
+	implementation "org.kordamp.ikonli:ikonli-entypo-pack:$ikonliVersion"
+	testImplementation "org.junit.jupiter:junit-jupiter:$junitVersion"
+	testImplementation "com.google.truth:truth:$truthVersion"
+}
+
+
+//// Distribution ////
+// 1. jlink
+// 2. copy libclang into the image
+// 3. jpackage
+// 4. zip the jpackage
+
+def copyClangTask = tasks.register("copyClang", Copy) {
 	group = "build"
 	description = "Copies the clang library into the image"
 
-	dependsOn tasks.jlink
-
-	from("lib") {
-		include "libclang**"
-    }
-    def subdir = osdetector.os == "windows" ? "bin" : "lib";
-    into tasks.jlink.imageDir.dir(subdir)
-
-//	doLast {
-//		println("Copied the jextract resources")
-//	}
+	// 'into' doesn't allow Gradle to infer order, so must depend on jlink to run first explicitly.
+	dependsOn tasks.named("jlink")
+	from("lib") { include "libclang**" }
+	def subdir = osdetector.os == "windows" ? "bin" : "lib"
+	// map through the TaskProvider to access imageDir lazily.
+	into tasks.named("jlink").map { it.imageDir.dir(subdir) }
 }
 
-tasks.named("jlink") { finalizedBy copyClang }
-tasks.named("jpackageImage") { dependsOn copyClang }
+tasks.named("jlink")         { finalizedBy copyClangTask }
+tasks.named("jpackageImage") { dependsOn copyClangTask }
 
-var iconPath;
-switch (osdetector.os) {
-	case "windows": iconPath = "buildResources/icons/icon.ico"
-		break
-	case "linux": iconPath = "src/main/resources/icons/icon.png" // linux reuses the runtime icon
-		break
-	case "osx": iconPath = "buildResources/icons/icon.icns"
-		break
-}
 jlink {
 	options = ["--strip-debug",
 			"--compress", "zip-6",
@@ -244,33 +294,39 @@ jlink {
 		jvmArgs = ["--enable-preview",
 				"--enable-native-access", "org.openjdk.jextract"]
 	}
-	jpackage {
-		icon = iconPath
-		imageOptions = ["--verbose",
-				"--app-content", "LICENSE.txt",
-				"--app-content", "NOTICE.txt"]
-	}
+}
+
+def iconPath = switch (osdetector.os) {
+	case "windows" -> "buildResources/icons/icon.ico";
+	case "linux" -> "src/main/resources/icons/icon.png";
+	case "osx" -> "buildResources/icons/icon.icns";
+}
+jpackage {
+	icon = iconPath
+	imageOptions = ["--verbose",
+			"--app-content", "LICENSE.txt",
+			"--app-content", "NOTICE.txt"]
 }
 
 tasks.register("jpackageImageZip", Zip) {
 	group = "build"
-	description = "Creates a Zips of the jpackage image"
+	description = "Creates a zip of the jpackage image"
 
-	dependsOn tasks.jpackageImage
-
-	from tasks.jpackageImage.imageOutputDir
-
+	from tasks.named("jpackageImage").map { it.imageOutputDir }
 	archiveClassifier = osdetector.os + "-" + osdetector.arch
 }
+
+def jpackageImageZipTask = tasks.named("jpackageImageZip", Zip)
 
 tasks.register("printArchiveFileName") {
 	group = "help"
 	description = "Prints the zipped image file name"
 
-	dependsOn tasks.jpackageImageZip
-
+	// config-cache: capture archive name provider at configuration time.
+	def fileName = jpackageImageZipTask.flatMap { it.archiveFileName }
+	dependsOn jpackageImageZipTask
 	doLast {
-		println(tasks.jpackageImageZip.archiveFileName.get())
+		println(fileName.get())
 	}
 }
 
@@ -278,10 +334,11 @@ tasks.register("printArchiveFilePath") {
 	group = "help"
 	description = "Prints the zipped image full path"
 
-	dependsOn tasks.jpackageImageZip
-
+	// config-cache: capture archive path provider at configuration time.
+	def filePath = jpackageImageZipTask.flatMap { it.archiveFile }
+	dependsOn jpackageImageZipTask
 	doLast {
-		println(tasks.jpackageImageZip.archiveFile.get())
+		println(filePath.get())
 	}
 }
 
@@ -289,13 +346,13 @@ tasks.register("printVersion") {
 	group = "help"
 	description = "Prints the project version"
 
+	// config-cache: capture version provider at configuration time.
+	def ver = version
 	doLast {
-		println(project.version)
+		println(ver)
 	}
 }
 
 tasks.named("wrapper") {
 	gradleVersion = gradleWrapperVersion
 }
-
-gradle.startParameter.showStacktrace = org.gradle.api.logging.configuration.ShowStacktrace.ALWAYS
