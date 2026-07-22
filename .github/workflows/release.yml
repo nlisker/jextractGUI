@@ -81,7 +81,7 @@ jobs:
         echo "artifact_path=$artifact_path"
 
     - name: Print content
-      run: ls -R
+      run: ls "$artifact_path"
 
     - name: Upload to release
       uses: ncipollo/release-action@v1 #https://github.com/ncipollo/release-action
@@ -95,6 +95,6 @@ jobs:
 
     - name: Print result
       run: |
-        files=$(basename -a "$artifacts_dir_path"/* | paste -sd ',' - | sed 's/,/, /g')
+        files=$(basename -a "$artifact_path"/* | paste -sd ',' - | sed 's/,/, /g')
 
-        echo "Released $files to v$version in ${{ inputs.repository }}"
+        echo "Released $files to v$version"
