@@ -7,6 +7,8 @@ If offers several benefits over using the command line tool:
 * Automatic command creation for inspection or copying into a CLI/script. The CLI uses error-prone unchecked strings.
 * Ease of use when working with multiple headers at once.
 
+Instructions akin to `-help` are provided through the help buttons.
+
 ![screenshot](doc/screenshot.png)
 
 ## Download
@@ -20,7 +22,10 @@ under [Releases](https://github.com/nlisker/jextractGUI/releases). jextract depe
   * `compileJava` downloads the jextract dependencies.
   * `run` starts the application.
   * `jpackageImage` builds the executables.
-* From the IDE: compile with `--enable-preview` and run with `--enable-preview --enable-native-access=org.openjdk.jextract`.
+* From the IDE:
+  * Compile with `--enable-preview`.
+  * Run with `--enable-preview --enable-native-access=org.openjdk.jextract`.
+  * The `lib` directory might need to be added to `java.library.path` (or to any directory it includes by default).
 
 ---
 
