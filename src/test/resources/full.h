@@ -63,4 +63,5 @@ union U {
    char ca[10];
 };
 
+// typedef
 typedef struct S T;
