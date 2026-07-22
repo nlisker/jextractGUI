@@ -138,21 +138,19 @@ public enum CLOption {
 			"""
 			Specifies the symbols to inlude in each header file for which bindings need to be generated.
 			To add a single header path, choose it with the select button (📂) or enter its path in the text field (⮠ ).
-			To add all header paths in a directory, recuresively, drag and drop (⭳) the directory into the list. Each header \
-			is parsed separately.
-			Headers will be passed to jextract and from there to Clang. Any error is passed back to the user.
+			To add all header paths in a directory, recuresively, drag and drop (⭳) the directory into the list.
 
-			If a header includes other headers, like '#include <header.h>', their paths will need to be provided. Clang searches \
-			some platform-specific directories automatically, like the includes folders of Visual Studio and Windows Kits on \
-			Windows. If the included headers are not found there, a notification will be shown saying that the header couldn't be \
-			found, but the passed header will still be added to the headers list. Then add the directories containing the included \
-			headers to the Includes list and click on the "Reload header" (⟳) button of that header. The "Show error" (⚠) button \
-			will re-show the notification of the missing header.
+			Each such *main header* is parsed separately by clicking on the parse button (🔍). Multiple parsing requests can be \
+			queued concurrently.
+			If a header includes other headers, as with '#include <header.h>', their paths will need to be provided in the \
+			Includes list. Clang searches some platform-specific directories automatically, like the includes folders of Visual \
+			Studio and Windows Kits on Windows. If the included headers are not found there, they might be ignored, and a \
+			notification might be shown saying that the header couldn't be found, depending on jextract's/clang's behavior.
 
-
-			Parsed headers will show all their symbols. Select the "Detailed view" checkbox to see details for symbols.
-			Include symbols (functions, structs, constants...) can be selected using the checkboxes. If all symbols are selected \
-			for a header, no --include-[...] options is used. This replaces the need to use dump symbols files and filtering.
+			Parsed main headers will show all their symbols categorized by headers and kinds (functions, structs, constants...). \
+			Select the "Detailed view" checkbox to see details for symbols.	Select the checkboxes of the symbols to include. \
+			If all symbols are selected for a main header, no --include-[...] options is used.
+			This replaces the need to use dump symbols files and filtering.
 
 			Example 1:
 			  jextract CLI: --include-struct Point2d
@@ -166,12 +164,12 @@ public enum CLOption {
 
 			Example:
 			  jextract CLI: <absent>
-			  jextractGUI: <ticked header checkbox (ticks all subitems)>
+			  jextractGUI: <ticked main header checkbox (ticks all subitems)>
 			All symbols will be included.
 
 
-			Selecting a header or one of its sub-entries will show the options (macros, output path...) for that header. These \
-			are unique for each header entry, so each header should be configured separately.
+			Selecting a main header or one of its sub-entries will show the options (macros, output path...) for that header. \
+			These are unique for each main header entry, so each main header should be configured separately.
 			Clicking on the "Print command" (🖊) button at any time will print the command that will be passed to jextract when \
 			the tool is run. This can be used inspect the command before running, or copying it to the command line. Clicking on \
 			the "Generate files" (▶) button will run jextract with the specified options. A notification will be shown with any \
