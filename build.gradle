@@ -286,8 +286,8 @@ def copyClangTask = tasks.register("copyClang", Copy) {
 	into tasks.named("jlink").map { it.imageDir.dir(subdir) }
 }
 
-tasks.named("jlink")         { finalizedBy copyClangTask }
-tasks.named("jpackageImage") { dependsOn copyClangTask }
+tasks.named("jlink") { finalizedBy copyClangTask }
+def jpackageImageTask = tasks.named("jpackageImage") { dependsOn copyClangTask }
 
 jlink {
 	options = ["--strip-debug",
@@ -308,20 +308,40 @@ def iconPath = switch (osdetector.os) {
 }
 jpackage {
 	icon = iconPath
-	imageOptions = ["--verbose"]//,
-//			"--app-content", "LICENSE.txt",
-//			"--app-content", "NOTICE.txt"]
+	imageOptions = ["--verbose"]
 }
 
-tasks.register("jpackageImageZip", Zip) {
+def jpackageImageZipTask = tasks.register("jpackageImageZip", Zip) {
 	group = "build"
 	description = "Creates a zip of the jpackage image"
 
-	from tasks.named("jpackageImage").map { it.imageOutputDir }
+	from jpackageImageTask.map { it.imageOutputDir }
+	
+	// add license files to top level
+	if (osdetector.os != "osx") {
+		from(layout.projectDirectory) {
+			include "LICENSE.txt", "NOTICE.txt"
+			into project.name
+		}
+	}
 	archiveClassifier = osdetector.os + "-" + osdetector.arch
 }
 
-def jpackageImageZipTask = tasks.named("jpackageImageZip", Zip)
+if (osdetector.os == "osx") {
+    def copyLicensesTask = tasks.register("copyLicenses", Copy) {
+        group = "build"
+        description = "Copies license files into the macOS app bundle's Resources directory"
+
+        dependsOn jpackageImageTask
+        from(layout.projectDirectory) {
+            include "LICENSE.txt", "NOTICE.txt"
+        }
+        into jpackageImageTask.map {
+            it.imageOutputDir.dir("${project.name}.app/Contents/Resources")
+        }
+    }
+    jpackageImageZipTask { dependsOn copyLicensesTask }
+}
 
 tasks.register("printArchiveFileName") {
 	group = "help"
