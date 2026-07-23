@@ -150,7 +150,7 @@ public sealed interface Displayable {
 
 		@Override
 		public String asOption() {
-			return "";
+			throw new UnsupportedOperationException("Header does not have corresponding CLI syntax");
 		}
 	}
 
@@ -174,7 +174,7 @@ public sealed interface Displayable {
 
 		@Override
 		public String detailed() {
-			return simple() /*+ " (" + includeDeclarations.size() + ")"*/;
+			return simple();
 		}
 
 		@Override
