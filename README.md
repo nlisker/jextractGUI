@@ -34,4 +34,4 @@ jextract dependencies are included (there's no need to download anything else).
 
 💡Tracing of native calls can be enabled with `-Djextract.trace.downcalls=true` for both the pre-built executables and local builds.
 
-IDE developers are welcome to create an integration (e.g., via a plugin) based on this work into their IDE.
+🔌IDE developers are welcome to create an integration (e.g., via a plugin) based on this work into their IDE.
