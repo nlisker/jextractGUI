@@ -39,7 +39,7 @@ plugins {
 	id "eclipse"
 }
 
-version = "1.0.0" // until java 27, can't start with 0 on mac
+version = "0.1.0" // until java 27, can't start with 0 on mac
 
 ext {
 	// jextract
