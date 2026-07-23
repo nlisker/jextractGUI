@@ -39,7 +39,7 @@ plugins {
 	id "eclipse"
 }
 
-version = "0.1.0" // until java 27, can't start with 0 on mac
+version = "0.1.0"
 
 ext {
 	// jextract
@@ -311,6 +311,7 @@ def appContent = switch (osdetector.os) {
 	case "osx" -> "buildResources/Resources";
 }
 jpackage {
+	appVersion = "1.0.0" // until java 27, can't start with 0 on mac
 	icon = iconPath
 	imageOptions = ["--verbose",
 			"--app-content", appContent]
