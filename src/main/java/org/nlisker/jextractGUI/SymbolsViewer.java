@@ -319,14 +319,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 						e.printStackTrace();
 						continue;
 					}
-					for (var headerItem : mainHeaderItem.getChildren()) {
-						var cbHeaderItem = (CheckBoxTreeItem<Displayable>) headerItem;
-						if (headerItem.getValue().detailed().equals(mainHeaderItem.getValue().detailed())) {
-							headerItem.setExpanded(true);
-							cbHeaderItem.setSelected(true);
-						}
-					}
-					mainHeaderItem.setExpanded(true);
+					selectSelfHeader(mainHeaderItem);
 					addOperationsButtonsForHeader(mainHeaderItem);
 				}
 			}
@@ -335,6 +328,18 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		var thread = new Thread(task);
 		thread.setDaemon(true);
 		thread.start();
+	}
+
+	// package-private for tests
+	static void selectSelfHeader(CheckBoxTreeItem<Displayable> mainHeaderItem) {
+		for (var headerItem : mainHeaderItem.getChildren()) {
+			var cbHeaderItem = (CheckBoxTreeItem<Displayable>) headerItem;
+			if (headerItem.getValue().detailed().equals(mainHeaderItem.getValue().detailed())) {
+				headerItem.setExpanded(true);
+				cbHeaderItem.setSelected(true);
+			}
+		}
+		mainHeaderItem.setExpanded(true);
 	}
 
 	private static void addOperationsButtonsForHeader(CheckBoxTreeItem<Displayable> mainHeaderItem) {
