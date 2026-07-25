@@ -3,12 +3,12 @@
 #pragma once
 
 // types
-extern __declspec(dllexport) void update(double* la, char c, unsigned char uc, short s, unsigned short us,
+void update(double* la, char c, unsigned char uc, short s, unsigned short us,
 			int i, unsigned int un, long l, unsigned long ul, long long ll, float f, double d, long double ld, short int id,
 			unsigned long long int lli);
 
 // function
-extern __declspec(dllexport) void update2(short s);
+extern void update2(short s);
 
 // function - variadic
 void varfunc(int y, ...);
