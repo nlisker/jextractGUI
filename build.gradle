@@ -79,23 +79,43 @@ application {
 	mainClass  = "org.nlisker.jextractGUI.JextractGUI"
 }
 
-test {
-	useJUnitPlatform()
-}
-
-tasks.withType(JavaExec).configureEach {
-	jvmArgs += "--enable-preview"
-	jvmArgs += "--enable-native-access=org.openjdk.jextract"
-	doFirst {
-		// Add the extracted libclang to the lib path
-		def libPath = "lib" + File.pathSeparator + System.getProperty("java.library.path")
-		systemProperty("java.library.path", libPath)
+testing.suites.configureEach {
+	useJUnitJupiter(junitVersion)
+	dependencies {
+		implementation("com.google.truth:truth:$truthVersion") {
+			// see https://github.com/google/truth/issues/333
+			exclude group: "junit", module: "junit"
+		}
+	}
+	targets {
+		all {
+			testTask.configure {
+				testLogging {
+					showStandardStreams = true
+				}
+				reports.html.required = true
+			}
+		}
 	}
 }
 
 tasks.withType(JavaCompile).configureEach {
 	options.compilerArgs.add("--enable-preview")
 	options.setEncoding("UTF-8")
+}
+
+def libDir = layout.projectDirectory.dir("lib").asFile.absolutePath
+
+tasks.withType(JavaExec).configureEach {
+	jvmArgs += "--enable-preview"
+	jvmArgs += "--enable-native-access=org.openjdk.jextract"
+	systemProperty "java.library.path", libDir
+}
+
+tasks.withType(Test).configureEach {
+	jvmArgs "--enable-preview"
+	jvmArgs "--enable-native-access=ALL-UNNAMED"
+	systemProperty "java.library.path", libDir
 }
 
 eclipse.classpath {
@@ -263,8 +283,6 @@ dependencies {
 	implementation "org.kordamp.ikonli:ikonli-javafx:$ikonliVersion"
 	implementation "org.kordamp.ikonli:ikonli-materialdesign2-pack:$ikonliVersion"
 	implementation "org.kordamp.ikonli:ikonli-entypo-pack:$ikonliVersion"
-	testImplementation "org.junit.jupiter:junit-jupiter:$junitVersion"
-	testImplementation "com.google.truth:truth:$truthVersion"
 }
 
 
