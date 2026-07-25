@@ -42,17 +42,22 @@ import lombok.experimental.FieldDefaults;
 import org.openjdk.jextract.Declaration;
 import org.openjdk.jextract.Declaration.ClangAttributes;
 
-/// An item to be displayed in the symbols tree. It can be a header, a type under a header, or a declaration under a type.
-/// Each item can be converted to a part of the run command using [#asOption]. For example:
+/// An item to be displayed in the symbols tree. It can be a header (main or included), an include kind under a header, or a
+/// declaration. Each (non-included header) item can be converted to a part of the run command using [#asOption]. For example:
 /// ```
-/// my/headers/header.h -> "my/headers/header.h"
-///   ☑ var            -> "--include-var"
-///     ☑ i            -> "i"
-///     ☐ u
+/// ☑ my/headers/header.h    -> "my/headers/header.h"
+///   ☑ my/headers/header.h
+///     ☑ var                -> "--include-var"
+///       ☑ i                -> "i"
+///       ☐ u
+///   ☑ my/headers/header2.h
+///     ☑ constant           -> "--include-constant"
+///       ☑ m                -> "m"
+///       ☐ a
 /// ```
 /// converts to
-/// `my/headers/header.h "--include-var i"`.
-public sealed interface Displayable {
+/// `my/headers/header.h "--include-var i --include-constant m"`.
+public interface Displayable {
 
 	/// {@return the simple textual representation of the `Displayable`}
 	String simple();
