@@ -38,6 +38,7 @@ jobs:
     strategy:
       matrix:
         os: ${{ fromJson(inputs.os) }}
+      fail-fast: false
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
