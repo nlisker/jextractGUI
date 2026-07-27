@@ -26,6 +26,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javafx.animation.Animation;
 import javafx.animation.Interpolator;
 import javafx.animation.RotateTransition;
+import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.BooleanProperty;
@@ -74,6 +75,7 @@ import org.kordamp.ikonli.materialdesign2.MaterialDesignE;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignM;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignP;
 import org.nlisker.jextractGUI.jextract.Extractor;
+import org.nlisker.jextractGUI.jextract.JextractResult;
 import org.nlisker.jextractGUI.jextract.Parser;
 import org.nlisker.jextractGUI.model.CLOption;
 import org.nlisker.jextractGUI.model.Displayable;
@@ -149,7 +151,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 		var runAllButton = ControlUtils.createButton(MaterialDesignA.ANIMATION_PLAY, EXEC_COLOR, "Generate bindings for all headers");
 		runAllButton.disableProperty().bind(noItems);
-		runAllButton.setOnAction(_ -> Extractor.runCommands(mainHeaders()));
+		runAllButton.setOnAction(_ -> Extractor.runCommands(mainHeaders()).forEach(SymbolsViewer::showExtractionResult));
 
 		var writeAllButton = ControlUtils.createButton(MaterialDesignP.PENCIL_BOX_MULTIPLE, CONF_COLOR, "Print command for all headers");
 		writeAllButton.disableProperty().bind(noItems);
@@ -310,17 +312,18 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		var task = new Task<Void>() {
 
 			@Override
-			protected Void call() throws InterruptedException  {
+			protected Void call() throws InterruptedException {
 				while (true) {
 					CheckBoxTreeItem<Displayable> mainHeaderItem = parseRequests.take();
-					try {
-						Parser.populateHeaderItem(mainHeaderItem);
-					} catch (Exception e) {
-						e.printStackTrace();
+					JextractResult result = Parser.populateHeaderItem(mainHeaderItem);
+					Platform.runLater(() -> showParseResult(result));
+					if (result.hasError()) {
 						continue;
 					}
-					selectSelfHeader(mainHeaderItem);
-					addOperationsButtonsForHeader(mainHeaderItem);
+					Platform.runLater(() -> {
+						selectSelfHeader(mainHeaderItem);
+						addOperationsButtonsForHeader(mainHeaderItem);
+					});
 				}
 			}
 		};
@@ -328,6 +331,17 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		var thread = new Thread(task);
 		thread.setDaemon(true);
 		thread.start();
+	}
+
+	/// Displays warnings and errors of a header parse.
+	private static void showParseResult(JextractResult result) {
+		AlertType type = null;
+		switch (result.status()) {
+			case SUCCESS: return; // the header tree is populated, no need for additional visual indication
+			case WARNING: type = AlertType.WARNING; break; // unreachable currently since jextract doesn't write streams on parse
+			case ERROR: type = AlertType.ERROR; break; // reachable only through an exception as explained above
+		}
+		new Alert(type, result.header().simple() + "\n" + result.errorOutput(), ButtonType.OK).show();
 	}
 
 	// package-private for tests
@@ -347,7 +361,7 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 
 		var runButton = ControlUtils.createButton(MaterialDesignP.PLAY_BOX, EXEC_COLOR, "Generate bindings");
 		runButton.disableProperty().bind(notSelected);
-		runButton.setOnAction(_ -> Extractor.runCommand(mainHeaderItem));
+		runButton.setOnAction(_ -> showExtractionResult(Extractor.runCommand(mainHeaderItem)));
 
 		var writeButton = ControlUtils.createButton(MaterialDesignP.PENCIL_BOX, CONF_COLOR, "Print command");
 		writeButton.disableProperty().bind(notSelected);
@@ -356,6 +370,19 @@ final class SymbolsViewer extends BorderPane implements TextInput<TreeItem<Displ
 		var buttons = new HBox(5, runButton, writeButton);
 		buttons.setPadding(new Insets(0, 0, 0, 5));
 		mainHeaderItem.setGraphic(buttons);
+	}
+
+	/// Displays the result of a header bindings generation run.
+	private static void showExtractionResult(JextractResult result) {
+		String outputPath = result.header().outputPath().get();
+		String output = outputPath.isBlank() ? "current directory" : outputPath;
+		Alert alert = switch (result.status()) {
+			case SUCCESS -> new Alert(AlertType.INFORMATION, "Generated bindings at " + output, ButtonType.OK);
+			case WARNING -> new Alert(AlertType.WARNING, "Generated bindings at " + output + " with warnings:\n\n"
+					+ result.errorOutput(), ButtonType.OK);
+			case ERROR -> new Alert(AlertType.ERROR, result.errorOutput(), ButtonType.OK);
+		};
+		alert.show();
 	}
 
 	private static class DeclarationDetailedStringConverter extends StringConverter<TreeItem<Displayable>> {

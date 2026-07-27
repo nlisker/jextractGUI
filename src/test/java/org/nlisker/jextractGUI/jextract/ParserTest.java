@@ -45,9 +45,12 @@ class ParserTest extends AbstractJextractTest {
 		private CheckBoxTreeItem<Displayable> headerItem;
 
 		@BeforeAll
-		void parseHeader() throws Exception {
+		void parseHeader() {
 			mainHeaderItem = createMainHeaderItem(HEADER_REL_PATH);
-			Parser.populateHeaderItem(mainHeaderItem);
+			JextractResult result = Parser.populateHeaderItem(mainHeaderItem);
+			
+			assertWithMessage(result.errorOutput()).that(result.isSuccess()).isTrue();
+			
 			headerItem = (CheckBoxTreeItem<Displayable>) mainHeaderItem.getChildren().getFirst();
 		}
 
@@ -105,9 +108,12 @@ class ParserTest extends AbstractJextractTest {
 		private CheckBoxTreeItem<Displayable> includedHeaderItem;
 
 		@BeforeAll
-		void parseHeader() throws Exception {
+		void parseHeader() {
 			mainHeaderItem = createMainHeaderItem("same/" + INCLUDING);
-			Parser.populateHeaderItem(mainHeaderItem);
+			JextractResult result = Parser.populateHeaderItem(mainHeaderItem);
+			
+			assertWithMessage(result.errorOutput()).that(result.isSuccess()).isTrue();
+			
 			includingHeaderItem = (CheckBoxTreeItem<Displayable>) mainHeaderItem.getChildren().getFirst();
 			includedHeaderItem = (CheckBoxTreeItem<Displayable>) mainHeaderItem.getChildren().getLast();
 		}
@@ -153,9 +159,13 @@ class ParserTest extends AbstractJextractTest {
 		private CheckBoxTreeItem<Displayable> headerItem;
 
 		@BeforeAll
-		void parseHeader() throws Exception {
+		void parseHeader() {
 			mainHeaderItem = createMainHeaderItem(HEADER_REL_PATH);
-			Parser.populateHeaderItem(mainHeaderItem);
+			// jextract currently parses the header without its unreachable includes, so this succeeds
+			JextractResult result = Parser.populateHeaderItem(mainHeaderItem);
+			
+			assertWithMessage(result.errorOutput()).that(result.isSuccess()).isTrue();
+			
 			headerItem = (CheckBoxTreeItem<Displayable>) mainHeaderItem.getChildren().getFirst();
 		}
 

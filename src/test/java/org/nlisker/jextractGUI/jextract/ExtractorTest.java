@@ -140,7 +140,10 @@ class ExtractorTest extends AbstractJextractTest {
 			void withUnspecifiedClassName() throws IOException {
 				mainHeader.outputPath().set(outputDir.toString());
 
-				Extractor.runCommand(mainHeaderItem);
+				JextractResult result = Extractor.runCommand(mainHeaderItem);
+
+				// full.h has bitfields that are not supported and will cause a warning
+				assertWithMessage(result.errorOutput()).that(result.hasWarning()).isTrue();
 
 				List<String> fileNames;
 				try (Stream<Path> paths = Files.walk(outputDir)) {
@@ -159,7 +162,9 @@ class ExtractorTest extends AbstractJextractTest {
 				var className = "MyHeader";
 				mainHeader.className().set(className);
 
-				Extractor.runCommand(mainHeaderItem);
+				JextractResult result = Extractor.runCommand(mainHeaderItem);
+
+				assertWithMessage(result.errorOutput()).that(result.hasError()).isFalse();
 
 				List<String> fileNames;
 				try (Stream<Path> paths = Files.walk(outputDir)) {
@@ -225,7 +230,9 @@ class ExtractorTest extends AbstractJextractTest {
 			void forBothHeadersWithOnlyVars() throws IOException {
 				mainHeader.outputPath().set(outputDir.toString());
 
-				Extractor.runCommand(mainHeaderItem);
+				JextractResult result = Extractor.runCommand(mainHeaderItem);
+
+				assertWithMessage(result.errorOutput()).that(result.hasError()).isFalse();
 
 				List<String> fileNames;
 				try (Stream<Path> paths = Files.walk(outputDir)) {
@@ -248,21 +255,24 @@ class ExtractorTest extends AbstractJextractTest {
 		private Path outputDir;
 
 		private final CheckBoxTreeItem<Displayable> mainHeaderItem = createMainHeaderItem(HEADER_REL_PATH);
+		private final MainHeader mainHeader = (MainHeader) mainHeaderItem.getValue();
 
 		@Test
 		void createCommandContainingOnlyMainHeader() {
 			String command = Extractor.createCommand(mainHeaderItem);
 
-			assertThat(command).contains("include_somewhere.h");
+			assertThat(command).contains(mainHeader.asOption());
 			assertThat(command).doesNotContain("--include-");
 		}
 
 		@Test
-		void notGenerateAnyFiles() throws Exception {
-			var mainHeader = (MainHeader) mainHeaderItem.getValue();
+		void reportTheErrorAndNotGenerateAnyFiles() throws Exception {
 			mainHeader.outputPath().set(outputDir.toString());
 
-			Extractor.runCommand(mainHeaderItem); // exceptions caught internally
+			JextractResult result = Extractor.runCommand(mainHeaderItem);
+
+			assertThat(result.hasError()).isTrue();
+			assertThat(result.errorOutput()).contains("'included1.h' file not found");
 
 			long fileCount;
 			try (var stream = Files.walk(outputDir)) {

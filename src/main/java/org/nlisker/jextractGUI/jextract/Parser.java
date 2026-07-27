@@ -20,10 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javafx.application.Platform;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBoxTreeItem;
 
 import lombok.experimental.UtilityClass;
@@ -41,11 +37,18 @@ import org.openjdk.jextract.JextractTool;
 @UtilityClass
 public class Parser {
 
-	/// Parses the header and populates its symbols and the symbols of all included headers.
-	public void populateHeaderItem(CheckBoxTreeItem<Displayable> mainHeaderItem) throws Exception {
+	/// Parses the header and populates its symbols and the symbols of all included headers. On failure the tree item is left
+	/// untouched.
+	/// {@return the result of the parse}
+	public JextractResult populateHeaderItem(CheckBoxTreeItem<Displayable> mainHeaderItem) {
 		var mainHeader = (MainHeader) mainHeaderItem.getValue();
 
-		List<Declaration> declarations = parse(mainHeader);
+		List<Declaration> declarations;
+		try {
+			declarations = parse(mainHeader);
+		} catch (Exception e) {
+			return JextractResult.ofException(mainHeader, e);
+		}
 
 		Map<Path, CheckBoxTreeItem<Displayable>> headers = new HashMap<>();
 
@@ -80,6 +83,8 @@ public class Parser {
 				addDeclaration(decl, groupItem);
 			}
 		});
+
+		return JextractResult.success(mainHeader);
 	}
 
 	private void addDeclaration(Declaration decl, CheckBoxTreeItem<Displayable> groupItem) {
@@ -94,13 +99,7 @@ public class Parser {
 				.flatMap(include -> List.of(CLOption.INCLUDES_PATH.commands().getLast(), include.toString()).stream())
 				.toArray(String[]::new);
 
-		try {
-			Scoped headerScope = JextractTool.parse(List.of(header.path().toString()), includes);
-			return headerScope.members();
-		} catch (Exception e) {
-			e.printStackTrace();
-			Platform.runLater(() -> new Alert(AlertType.ERROR, header.simple() + "\n" + e.getMessage(), ButtonType.OK).show());
-			throw e;
-		}
+		Scoped headerScope = JextractTool.parse(List.of(header.path().toString()), includes);
+		return headerScope.members();
 	}
 }

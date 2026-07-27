@@ -22,15 +22,10 @@ import java.io.PrintStream;
 import java.util.List;
 import java.util.stream.Stream;
 
-import javafx.application.Platform;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBoxTreeItem;
 import javafx.scene.control.TreeItem;
 
 import lombok.experimental.UtilityClass;
-
-import javafx.scene.control.Alert.AlertType;
 
 import org.nlisker.jextractGUI.model.Displayable;
 import org.nlisker.jextractGUI.model.Displayable.MainHeader;
@@ -51,8 +46,11 @@ public class Extractor {
 	}
 
 	/// Runs the commands for all selected or indeterminate headers to generate bindings.
-	public void runCommands(List<TreeItem<Displayable>> mainHeaderItems) {
-		streamRelevantHeaders(mainHeaderItems).forEach(Extractor::runCommand);
+	/// {@return the results of all the runs}
+	public List<JextractResult> runCommands(List<TreeItem<Displayable>> mainHeaderItems) {
+		return streamRelevantHeaders(mainHeaderItems)
+				.map(Extractor::runCommand)
+				.toList();
 	}
 
 	@SuppressWarnings("cast")
@@ -74,7 +72,8 @@ public class Extractor {
 	}
 
 	/// Runs the command for the header to generate bindings.
-	public void runCommand(CheckBoxTreeItem<Displayable> mainHeaderItem) {
+	/// {@return the result of the run}
+	public JextractResult runCommand(CheckBoxTreeItem<Displayable> mainHeaderItem) {
 		var header = (MainHeader) mainHeaderItem.getValue();
 		List<String> commandArgs = createCommandArgs(mainHeaderItem);
 
@@ -84,33 +83,13 @@ public class Extractor {
 		try {
 			JEXTRACT.run(System.out, errorStream, commandArgs.toArray(new String[0]));
 		} catch (Exception e) {
-			e.printStackTrace();
-			return;
+			return JextractResult.ofException(header, e);
 		}
 
 		errorStream.flush();
-		var errorMessage = errorBuffer.toString();
-		System.err.append(errorMessage);
-	    try {
-	        parseErrorStream(errorMessage);
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return;
-	    }
-
-		String outputPath = header.outputPath().get();
-		String output = outputPath.isBlank() ? "current directory" : outputPath;
-		Platform.runLater(() -> new Alert(AlertType.INFORMATION, "Generated bindings at " + output + ".", ButtonType.OK).show());
-	}
-
-	private void parseErrorStream(String stream) throws Exception {
-		if (stream.contains("error")) {
-			Platform.runLater(() -> new Alert(AlertType.ERROR, stream, ButtonType.OK).show());
-			throw new Exception(stream);
-		}
-		if (stream.contains("warning")) {
-			Platform.runLater(() -> new Alert(AlertType.WARNING, stream, ButtonType.OK).show());
-		}
+		String errorOutput = errorBuffer.toString();
+		System.err.append(errorOutput); // forward jextract err to system err
+		return JextractResult.ofErrorOutput(header, errorOutput);
 	}
 
 	private List<String> createCommandArgs(CheckBoxTreeItem<Displayable> mainHeaderItem) {

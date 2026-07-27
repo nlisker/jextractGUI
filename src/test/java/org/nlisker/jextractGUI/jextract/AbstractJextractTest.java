@@ -18,27 +18,17 @@ package org.nlisker.jextractGUI.jextract;
 import java.net.URL;
 import java.nio.file.Path;
 
-import javafx.application.Platform;
 import javafx.scene.control.CheckBoxTreeItem;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.nlisker.jextractGUI.ReplaceCamelCase;
 import org.nlisker.jextractGUI.model.Displayable;
 import org.nlisker.jextractGUI.model.Displayable.MainHeader;
 
+/// Base class for tests that call jextract. No JavaFX toolkit is needed: [Parser] and [Extractor] report their outcome as a
+/// [JextractResult] and leave the display of it to the GUI layer, and tree items are model classes that work without a toolkit.
 @DisplayNameGeneration(ReplaceCamelCase.class)
 abstract class AbstractJextractTest {
-
-	/// Initialize the JavaFX toolkit for tests that use JavaFX via `Platform.runLater()` (for `Alert`s).
-	@BeforeAll
-	void initFX() {
-		try {
-			Platform.startup(() -> {});
-		} catch (IllegalStateException _) {
-			// ignore - JavaFX toolkit already started by another test class.
-		}
-	}
 
 	protected final CheckBoxTreeItem<Displayable> createMainHeaderItem(String relativePath) {
 		return new CheckBoxTreeItem<>(new MainHeader(resourcePath(relativePath)));
