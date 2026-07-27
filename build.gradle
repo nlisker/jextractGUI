@@ -319,6 +319,8 @@ jlink {
 	}
 }
 
+def macResources = "buildResources/Resources"
+
 if (osdetector.os == "osx") {
     def stageLicensesTask = tasks.register("stageLicenses", Copy) {
         group = "build"
@@ -327,7 +329,7 @@ if (osdetector.os == "osx") {
         from(layout.projectDirectory) {
             include "LICENSE.txt", "NOTICE.txt"
         }
-        into layout.buildDirectory.dir("buildResources/Resources")
+        into layout.buildDirectory.dir(macResources)
     }
 
     tasks.named("jpackageImage") { dependsOn stageLicensesTask }
@@ -340,7 +342,7 @@ def iconPath = switch (osdetector.os) {
 }
 def appContent = switch (osdetector.os) {
 	case "windows", "linux" -> "LICENSE.txt,NOTICE.txt";
-	case "osx" -> "buildResources/Resources";
+	case "osx" -> macResources;
 }
 jpackage {
 	appVersion = "1.0.0" // until java 27, can't start with 0 on mac
