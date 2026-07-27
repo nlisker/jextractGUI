@@ -1,2 +1,0 @@
-Copyright 2024-2026 Nir Lisker (nlisker)
-Original source repository: https://github.com/nlisker/jextractGUI

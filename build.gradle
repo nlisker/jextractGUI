@@ -319,6 +319,20 @@ jlink {
 	}
 }
 
+if (osdetector.os == "osx") {
+    def stageLicensesTask = tasks.register("stageLicenses", Copy) {
+        group = "build"
+        description = "Stages license files in a Resources directory for macOS jpackage --app-content"
+
+        from(layout.projectDirectory) {
+            include "LICENSE.txt", "NOTICE.txt"
+        }
+        into layout.buildDirectory.dir("licenseStaging/Resources")
+    }
+
+    tasks.named("jpackageImage") { dependsOn stageLicensesTask }
+}
+
 def iconPath = switch (osdetector.os) {
 	case "windows" -> "buildResources/icons/icon.ico";
 	case "linux" -> "src/main/resources/icons/icon.png";
