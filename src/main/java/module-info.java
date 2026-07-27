@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-module org.nlisker.jextractGUI {
+module io.github.nlisker.jextractGUI {
 	requires static lombok;
 
 	requires transitive javafx.graphics;
@@ -26,5 +26,5 @@ module org.nlisker.jextractGUI {
 
 	requires org.openjdk.jextract;
 
-	exports org.nlisker.jextractGUI to javafx.graphics;
+	exports io.github.nlisker.jextractGUI to javafx.graphics;
 }
