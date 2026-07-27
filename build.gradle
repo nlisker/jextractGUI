@@ -327,7 +327,7 @@ if (osdetector.os == "osx") {
         from(layout.projectDirectory) {
             include "LICENSE.txt", "NOTICE.txt"
         }
-        into layout.buildDirectory.dir("licenseStaging/Resources")
+        into layout.buildDirectory.dir("buildResources/Resources")
     }
 
     tasks.named("jpackageImage") { dependsOn stageLicensesTask }
